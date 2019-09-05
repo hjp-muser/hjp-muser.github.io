@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title><![CDATA[使用HEXO搭建个人博客(Ubuntu 18)]]></title>
+    <url>%2F2019%2F09%2F05%2F%E4%BD%BF%E7%94%A8HEXO%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%2F</url>
+    <content type="text"><![CDATA[参考官方文档https://hexo.io/zh-cn/docs 1.安装nvm1wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | sh 将以下语句添加到.bashrc文件： 12export NVM_DIR=&quot;$HOME/.nvm&quot;[ -s &quot;$NVM_DIR/nvm.sh&quot; ] &amp;&amp; . &quot;$NVM_DIR/nvm.sh&quot; # This loads nvm 开始安装 1nvm install stable 2.安装HEXO1npm install -g hexo-cli 3.创建blog文件夹1234hexo init blog #通过hexo创建一个blog项目cd blog npm installhexo server #开发服务 4.配置git地址在blog项目根目录下里找到_config.yml文件，找到Deployment，然后按照如下修改： 1234deploy: type: git repo: git@github.com:yourname/yourname.github.io.git branch: master 5.安装 hexo-deployer-git自动部署发布工具1npm install hexo-deployer-git --save 需要在博客目录下安装 6.生成静态文件部署到githubhexo clean &amp;&amp; hexo g &amp;&amp; hexo d 7.打开博客地址：yourname.github.io部署到github后可能得等一会才会生效，少则一分钟，多则半小时。]]></content>
+      <categories>
+        <category>HEXO</category>
+      </categories>
+      <tags>
+        <tag>HEXO</tag>
+      </tags>
+  </entry>
+</search>
