@@ -55,20 +55,20 @@
   };
 </script>
 
-  <meta name="description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。 1.1 处理连续动作空间的问题 DQN存在的问题是只能处理低维度，离散的动作空间。  不能直接把Q-learning用在连续的动作空间中。">
+  <meta name="description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
 <meta name="keywords" content="强化学习">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DDPG论文笔记">
 <meta property="og:url" content="http://yoursite.com/2019/09/10/DDPG论文笔记/index.html">
 <meta property="og:site_name" content="Huangjp Blog">
-<meta property="og:description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。 1.1 处理连续动作空间的问题 DQN存在的问题是只能处理低维度，离散的动作空间。  不能直接把Q-learning用在连续的动作空间中。">
+<meta property="og:description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://yoursite.com/.com//09/10/DDPG论文笔记/OrnsteinUhlenbeck.png">
-<meta property="og:updated_time" content="2019-09-10T03:48:59.755Z">
+<meta property="og:image" content="http://yoursite.com/2019/09/10/DDPG论文笔记/OrnsteinUhlenbeck.png">
+<meta property="og:updated_time" content="2019-09-10T06:20:17.365Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="DDPG论文笔记">
-<meta name="twitter:description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。 1.1 处理连续动作空间的问题 DQN存在的问题是只能处理低维度，离散的动作空间。  不能直接把Q-learning用在连续的动作空间中。">
-<meta name="twitter:image" content="http://yoursite.com/.com//09/10/DDPG论文笔记/OrnsteinUhlenbeck.png">
+<meta name="twitter:description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
+<meta name="twitter:image" content="http://yoursite.com/2019/09/10/DDPG论文笔记/OrnsteinUhlenbeck.png">
   <link rel="canonical" href="http://yoursite.com/2019/09/10/DDPG论文笔记/">
 
 
@@ -259,7 +259,7 @@
                 
               
 
-              <time title="创建时间：2019-09-10 11:32:49 / 修改时间：11:48:59" itemprop="dateCreated datePublished" datetime="2019-09-10T11:32:49+08:00">2019-09-10</time>
+              <time title="创建时间：2019-09-10 11:32:49 / 修改时间：14:20:17" itemprop="dateCreated datePublished" datetime="2019-09-10T11:32:49+08:00">2019-09-10</time>
             </span>
           
             
@@ -306,6 +306,8 @@
 
       
         <h2 id="1-简述"><a href="#1-简述" class="headerlink" title="1. 简述"></a>1. 简述</h2><p>提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。</p>
+<a id="more"></a>
+
 <h3 id="1-1-处理连续动作空间的问题"><a href="#1-1-处理连续动作空间的问题" class="headerlink" title="1.1 处理连续动作空间的问题"></a>1.1 处理连续动作空间的问题</h3><ul>
 <li><p>DQN存在的问题是只能处理低维度，离散的动作空间。</p>
 </li>
@@ -387,8 +389,8 @@ $$y_t = r(s_t, a_t) + \gamma Q(s_{t+1}, \mu(s_{t+1}) | \theta^Q)$$
 <p>为了避免目标Q值 $y_t$ 中包含不稳定的网络 $Q(s, a|\theta^Q)$ 输出，采用称为“soft target update” 的更新方法。首先，重新复制一份actor网络，$\mu’(s|\theta^{\mu’})$和critic网络，$Q’(s, a|\theta^{Q’})$，它们用来计算目标Q值。目标网络 $\mu’(s|\theta^{\mu’})$ 和 $Q’(s, a|\theta^{Q’})$ 随着学习网络 $\mu(s|\theta^{\mu})$ 和 $Q(s, a|\theta^Q)$ 更新而更新，但是目标网络的更新幅度远小于学习网络： $\theta’ \leftarrow \tau \theta + (1 - \tau) \theta$， $\tau \ll 1$。<strong>这意味着目标网络变化缓慢，提高了目标值计算的稳定性。</strong>（不过应该没有彻底解决这一问题，毕竟还是目标网络用于目标值计算时也并非稳定的，只是变化缓慢而已。）但是降低目标网络的更新幅度，可能会让学习网络的更新变慢，也就是牺牲更新速度来提供收敛稳定性。<strong>不过文中提到，在实际中，学习的稳定性比学习的速度要重要得多</strong>。</p>
 <p>另一个问题就是观测值包含不同元素(例如位置信息和速度信息)，这些元素包含不一样的物理量度，变化值范围不同，如果采用这些不同量度的元素，可能会导致网络学习效率变低，也很难在不同环境中泛化。<strong>因此需要将所有这些元素重新归一化到相同的范围。</strong>采用的方法是Ioffe 和 Szegedy 提出的<em>batch normalization</em>。这种方法会将每个mini-batch中的样本每个维度归一到相同的均值和方差。同时保留这个均值和方差，以用于测试的样本的归一化。<strong>对 $\mu$ 网络和 Q 网络的所有隐藏层和状态输入都进行归一化。</strong></p>
 <p>为了提高探索效率，采用的行动策略 $\mu’$是对目标策略 $\mu(s_t|\theta_t^\mu)$加上噪声 $\mathcal{N}$：<br>$\mu’(s_t) = \mu(s_t|\theta_t^\mu) + \mathcal{N}$。论文中采用的噪声是<a href="https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process" target="_blank" rel="noopener">Ornstein-Unlenbeck process</a>（O-U过程）。</p>
-<!-- ![OrnsteinUhlenbeck](OrnsteinUhlenbeck.png) -->
-<img src="/.com//09/10/DDPG论文笔记/OrnsteinUhlenbeck.png" title="OrnsteinUhlenbeck">
+<p><img src="/2019/09/10/DDPG论文笔记/OrnsteinUhlenbeck.png" alt="OrnsteinUhlenbeck"></p>
+<!-- <img src="/2019/09/10/DDPG论文笔记/OrnsteinUhlenbeck.png" title="OrnsteinUhlenbeck"> -->
     </div>
 
     
