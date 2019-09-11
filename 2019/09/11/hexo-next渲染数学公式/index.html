@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="Huangjp Blog">
 <meta property="og:description" content="博客中通常会用latex来写数学公式，但是浏览器并不总是能渲染这些公式，导致在浏览器上看是一堆latex代码，这就很烦了。有一种比较简便的方法去渲染这些公式，就是在浏览器中添加相关的mathjax插件。遗憾的是，并不能保证每个浏览器都会有相应的mathjax插件，并且浏览博客的读者浏览器也不能保证一定装了这些插件。为了从根源上解决问题，我们直接让hexo具备渲染mathjax的能力，这样无论浏览器">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-09-10T17:52:41.118Z">
+<meta property="og:updated_time" content="2019-09-11T02:49:19.145Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="hexo+next渲染数学公式">
 <meta name="twitter:description" content="博客中通常会用latex来写数学公式，但是浏览器并不总是能渲染这些公式，导致在浏览器上看是一堆latex代码，这就很烦了。有一种比较简便的方法去渲染这些公式，就是在浏览器中添加相关的mathjax插件。遗憾的是，并不能保证每个浏览器都会有相应的mathjax插件，并且浏览博客的读者浏览器也不能保证一定装了这些插件。为了从根源上解决问题，我们直接让hexo具备渲染mathjax的能力，这样无论浏览器">
@@ -257,7 +257,7 @@
                 
               
 
-              <time title="创建时间：2019-09-11 01:01:32 / 修改时间：01:52:41" itemprop="dateCreated datePublished" datetime="2019-09-11T01:01:32+08:00">2019-09-11</time>
+              <time title="创建时间：2019-09-11 01:01:32 / 修改时间：10:49:19" itemprop="dateCreated datePublished" datetime="2019-09-11T01:01:32+08:00">2019-09-11</time>
             </span>
           
             
@@ -320,7 +320,7 @@
 <h2 id="5-博客中开启mathjax"><a href="#5-博客中开启mathjax" class="headerlink" title="5. 博客中开启mathjax"></a>5. 博客中开启mathjax</h2><p>在博客的模板中添加mathjax: true，注意冒号后面是有一个空格的。<br><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Testing Mathjax with Hexo</span><br><span class="line">category: Uncategorized</span><br><span class="line">date: 2017/05/03</span><br><span class="line">mathjax: true</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
 <p>如果嫌弃每次都需要声明开启mathjax，可以在&lt; your-hexo-project &gt;/scaffolds/post.md新增一句mathjax: true<br><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: &#123;&#123; title &#125;&#125;</span><br><span class="line">date: &#123;&#123; date &#125;&#125;</span><br><span class="line">categories:</span><br><span class="line">tags:</span><br><span class="line">mathjax: true</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
 <h2 id="6-更新Mathjax的CDN链接（可选）"><a href="#6-更新Mathjax的CDN链接（可选）" class="headerlink" title="6. 更新Mathjax的CDN链接（可选）"></a>6. 更新Mathjax的CDN链接（可选）</h2><p>这个是可选的，一般情况下直接下载hexo-renderer-mathjax是不需要修改CDN的。如果以上配置都弄好后，还是不能渲染公式，可以尝试更新Mathjax的CDN链接。更新方法是：打开/node_modules/hexo-renderer-mathjax/mathjax.html，然后把标签\<script\>更改为：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure></script\></p>
-<p>注意：网上给出的CDN链接都未必百分百可用，建议多找几个试一下。</p>
+<p>注意：网上给出的CDN链接都未必百分百可用，建议多找几个试一下。可以去搜索mathjax国内cdn，参考网址：<a href="https://www.bootcdn.cn/mathjax/" target="_blank" rel="noopener">https://www.bootcdn.cn/mathjax/</a></p>
 
     </div>
 
@@ -442,7 +442,7 @@
       
       <div class="site-state-item site-state-tags">
         
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">标签</span>
         
       </div>
