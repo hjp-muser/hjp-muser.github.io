@@ -64,7 +64,7 @@
 <meta property="og:description" content="DQN强化学习方法系列主要是由两篇文章提出，分别是 Playing Atari with Deep Reinforcement Learning 和 Human-level control through deep reinforcement learning。这两篇文章讲述的具体方法在之前的博客 DQN相关论文笔记中有过介绍，在这篇文章中分析DQN强化学习方法的代码实现细节。 1. 算法为代码">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://yoursite.com/2019/10/16/DQN代码实现/DQN_peseudocode.png">
-<meta property="og:updated_time" content="2019-10-17T13:32:18.302Z">
+<meta property="og:updated_time" content="2019-10-17T14:54:12.037Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="DQN代码实现">
 <meta name="twitter:description" content="DQN强化学习方法系列主要是由两篇文章提出，分别是 Playing Atari with Deep Reinforcement Learning 和 Human-level control through deep reinforcement learning。这两篇文章讲述的具体方法在之前的博客 DQN相关论文笔记中有过介绍，在这篇文章中分析DQN强化学习方法的代码实现细节。 1. 算法为代码">
@@ -270,7 +270,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-17 21:32:18" itemprop="dateModified" datetime="2019-10-17T21:32:18+08:00">2019-10-17</time>
+                <time title="修改时间：2019-10-17 22:54:12" itemprop="dateModified" datetime="2019-10-17T22:54:12+08:00">2019-10-17</time>
               </span>
             
           
@@ -352,7 +352,7 @@
 <h3 id="2-6-运行DDPG"><a href="#2-6-运行DDPG" class="headerlink" title="2.6 运行DDPG"></a>2.6 运行DDPG</h3><p>训练好模型之后，将网络的参数保存，然后在评测的时候重新载入模型参数。采用的策略也算是 $\epsilon-$  贪婪策略，不过 $\epsilon$ 值采用最小值。代码如下所示：<br><figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">evaluate</span><span class="params">()</span>:</span></span><br><span class="line">    q = Qnet()</span><br><span class="line">    checkpoint = torch.load(SAVE_PATH)</span><br><span class="line">    q.load_state_dict(checkpoint[<span class="string">'q_state_dict'</span>])</span><br><span class="line">    q.eval()</span><br><span class="line">    env = gym.make(<span class="string">'CartPole-v1'</span>)</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>):</span><br><span class="line">        s = env.reset()</span><br><span class="line">        done = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">not</span> done:</span><br><span class="line">            a = q.sample_action(torch.from_numpy(s).float(), min_epsilon)</span><br><span class="line">            s_prime, r, done, info = env.step(a)</span><br><span class="line">            env.render()    </span><br><span class="line">            s = s_prime</span><br><span class="line"></span><br><span class="line">    env.close()</span><br></pre></td></tr></table></figure></p>
 <h3 id="2-7-超参数的设置"><a href="#2-7-超参数的设置" class="headerlink" title="2.7 超参数的设置"></a>2.7 超参数的设置</h3><p>超参数的设置很重要，但没有特定的方法指导，所以全凭经验。简单总结一些经验：</p>
 <ol>
-<li><p>确定学习步长一般先确定它的数量级，比如学习步长的数量级为 $10^{-4}$，然后再对系数进行微调。</p>
+<li><p>确定学习步长一般先确定它的数量级，比如学习步长的数量级为 $10^{-4}$，然后再对系数进行微调。在不影响后期收敛速度的情况下，学习步长选择低一点的。</p>
 </li>
 <li><p>batch_size 的大小对学习的稳定性有影响。如果 batch_size 太小，模型可能一开始取得较优值，后面训练的性能却开始下降，这是因为模型过拟合。所以 batch_size 不能太小。但是也不能太大，否则收敛速度过慢，训练过程太久。</p>
 </li>
