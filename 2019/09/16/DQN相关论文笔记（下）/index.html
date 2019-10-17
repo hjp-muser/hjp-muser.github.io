@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这篇笔记主要提及下面四篇关于DQN的著名论文的后两篇：  [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp;amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retr">
+<meta name="keywords" content="强化学习,DQN">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DQN相关论文笔记（下）">
+<meta property="og:url" content="http://yoursite.com/2019/09/16/DQN相关论文笔记（下）/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="这篇笔记主要提及下面四篇关于DQN的著名论文的后两篇：  [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp;amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retr">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2019/09/16/DQN相关论文笔记（下）/DuelingDQN_architecture.png">
+<meta property="og:updated_time" content="2019-10-02T06:05:40.007Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DQN相关论文笔记（下）">
+<meta name="twitter:description" content="这篇笔记主要提及下面四篇关于DQN的著名论文的后两篇：  [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp;amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retr">
+<meta name="twitter:image" content="http://yoursite.com/2019/09/16/DQN相关论文笔记（下）/DuelingDQN_architecture.png">
+  <link rel="canonical" href="http://yoursite.com/2019/09/16/DQN相关论文笔记（下）/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>DQN相关论文笔记（下） | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/16/DQN相关论文笔记（下）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">DQN相关论文笔记（下）
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-16 01:56:03" itemprop="dateCreated datePublished" datetime="2019-09-16T01:56:03+08:00">2019-09-16</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-02 14:05:40" itemprop="dateModified" datetime="2019-10-02T14:05:40+08:00">2019-10-02</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/16/DQN相关论文笔记（下）/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/09/16/DQN相关论文笔记（下）/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这篇笔记主要提及下面四篇关于DQN的著名论文的后两篇：</p>
+<p><span id="id1"> [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retrieved from <a href="http://arxiv.org/abs/1312.5602" target="_blank" rel="noopener">http://arxiv.org/abs/1312.5602</a></span></p>
+<p><span id="id2"> [2] Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., … Hassabis, D. (2015). Human-level control through deep reinforcement learning. Nature, 518(7540), 529–533. <a href="https://doi.org/10.1038/nature14236" target="_blank" rel="noopener">https://doi.org/10.1038/nature14236</a></span></p>
+<p><span id="id3"> [3] Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). Deep reinforcement learning with double Q-Learning. 30th AAAI Conference on Artificial Intelligence, AAAI 2016, 2094–2100.</span></p>
+<p><span id="id4"> [4] Wang, Z., Schaul, T., Hessel, M., Van Hasselt, H., Lanctot, M., &amp; De Frcitas, N. (2016). Dueling Network Architectures for Deep Reinforcement Learning. 33rd International Conference on Machine Learning, ICML 2016, 4(9), 2939–2947.<br><a id="more"></a></span></p>
+<p>DQN（Deep Q-Learning）算是 DRL 的开山之作，算是采用了 Value function approximation 的 critic-only 类算法，实现了从感知到动作的端对端学习法，由 DeepMind 在 NIPS 2013 上提出[1]，后在 Nature 2015 上提出改进版本[2]。Double-DQN[3] 和 Dualing-DQN[4] 都是 DQN 的改进版本，前者对训练算法进行了改进，后者对模型结构进行了改进。</p>
+<p>Q-learning 存在对 Q 值估计偏高的问题，可能会导致非最优解和学习过程稳定性下降。DQN 是基于 Q-learning 的模型，所以本质上也有这个问题。</p>
+<h1 id="一、-Double-DQN：解决-Q-值估计偏高-3"><a href="#一、-Double-DQN：解决-Q-值估计偏高-3" class="headerlink" title="一、 Double DQN：解决 Q 值估计偏高 [3]"></a>一、 Double DQN：解决 Q 值估计偏高 <a href="#id3">[3]</a></h1><h2 id="1-Double-DQN-简述"><a href="#1-Double-DQN-简述" class="headerlink" title="1. Double DQN 简述"></a>1. Double DQN 简述</h2><h3 id="1-1-Q-learning-存在-Q-值估计偏高问题"><a href="#1-1-Q-learning-存在-Q-值估计偏高问题" class="headerlink" title="1.1 Q-learning 存在 Q 值估计偏高问题"></a>1.1 Q-learning 存在 Q 值估计偏高问题</h3><p>直觉上，Q-learning 算法中估算目标 Q 值时采用的目标策略是最大化的贪婪策略，因此对目标策略的 Q 值估计值往往会偏高，最终导致确定状态下输出的动作的估计 Q 值也会偏高。另外环境噪声等因素也会让动作的估计 Q 值偏高。总而言之，只要学习过程出现动作-值不准确，无论误差来源于什么地方，动作-值都会被高估。这是 Q-learning 算法中普遍遇到的问题，因此有必要解决这一问题，提高算法的稳定性。</p>
+<p>那么是否 Q 值估计偏高一定会给算法带来问题呢？不一定。理想状态下，如果所有的动作-值都被统一地估计偏高相同的程度，对于选取动作是没有影响的，因此算法的性能也不会受到影响。但是，这种估计偏高的程度并不是统一地出现在每个动作-值的估计上，有些动作-值估计偏高的程度大，而有些动作-值估计偏高的程度小，如果非最优动作的动作-值被偏高估计超过最优动作的估计动作-值，那就会造成算法性能的下降。</p>
+<p>由于 DQN 算法是基于 Q-learning，因此 DQN 本质上也存在这个问题。</p>
+<h3 id="1-2-本篇论文的工作"><a href="#1-2-本篇论文的工作" class="headerlink" title="1.2 本篇论文的工作"></a>1.2 本篇论文的工作</h3><p>本篇论文提出的 Double DQN 是根据 (van Hasselt, 2010) 的 idea 提出的。本篇论文首先证明了 Q-learning 的估计偏高问题的确会影响到算法的性能，并且这是一种普遍现象。进而本文证明 Double Q-learing 能缓解这种问题，并结合 Double Q-learing 和 DQN 提出了一种解决估计偏高，提高 DQN 算法性能的方法，同时在 Atari 各项游戏中取得更优的成绩。</p>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>关于 Q-learning 和 DQN 的背景知识在这里不再赘述，可以阅读《DQN 相关论文笔记（上）》。</p>
+<p>Double Q-learning 背后的思想是将动作的选择和动作-值的估计解耦，让它们使用不同的 Q 函数（网络）。注意 Nature DQN 虽然提出了独立目标 Q 网络，但是实际上目标 Q 网络的参数只是相当于在线 Q 网络的参数的延迟更新，本质上它们的参数是同一个参数。</p>
+<p>van Hasselt 在2010年提出了 Double Q-learning 的思想。Double Q-learning 采用两组独立的参数 $\theta$ 和 $\theta’$，每个样本随机更新其中一个参数。为了进行更清晰的对比，将传统的在线 Q-learning 算法 的目标 Q 函数改写为：</p>
+<script type="math/tex; mode=display">y_t^Q  = r_{t+1} + \gamma Q(s_{t+1},\mathop{argmax}_a Q(S_{t+1},a;\theta_t);\theta_t)</script><p>double Q-learning 的目标 Q 函数：</p>
+<script type="math/tex; mode=display">y_t^{DoubleQ} = r_{t+1} + \gamma Q(s_{t+1}, \mathop{argmax}_a Q(s_{t+1}, a; \theta_t);\theta_t')</script><p>可以看到仍然采用在线 Q 函数的当前的参数 $\theta_t$ 来执行贪婪策略（动作选择），但是采用新的参数 $\theta_t’$ 来重新公平地评估这个策略。第二组参数 $\theta_t’$ 可以通过对称地交换 $\theta$ 和 $\theta’$ 的角色进行更新，也就是说 $\theta$ 和 $\theta’$ 轮流交换负责动作选择和动作评估两个过程。</p>
+<h2 id="3-估计误差引发过度估计证明"><a href="#3-估计误差引发过度估计证明" class="headerlink" title="3. 估计误差引发过度估计证明"></a>3. 估计误差引发过度估计证明</h2><p>本文证明了无论什么样的估计误差，都会给动作-值的带来偏高的估计。</p>
+<p>论文中给出了定理一，证明一旦存在估计误差，传统的在线 Q-learning 算法的目标 Q 函数的估计一定会偏高，也就是<strong>具备非零下限</strong>；而 Double Q-learning 可以让下限为零。定理一如下：</p>
+<blockquote>
+<p><strong>Theorem 1.</strong> Consider a state $s$ in which all the true optimal action values are equal at $Q_*(s,a)=V_*(s)$ for some $V_*(s)$. Let $Q_t$ be arbitrary value estimates that are on the whole unbiased in the sense that $\sum_a(Q_t(s,a)-V_*(s))=0$, but that are not all correct, such that $\frac{1}{m}\sum_a(Q_t(s,a)-V_*(s))^2=C$ for some $C &gt; 0$, where $m \ge 2$ is the number of actons in s. Under these conditions, $max_a Q_t(s,a) \ge V_*(s) + \sqrt{\frac{C}{m-1}}$. This lower bound is tight. Under the same conditions, the lower bound on the absolute error of the Double Q-learing estimate is zero.</p>
+</blockquote>
+<p>定理一表明即使动作-值估计的平均值是正确的，但是一旦有某个动作-值估计错误，带来的估计误差都会让目标 Q 函数的估计值偏高。下限 $\sqrt{\frac{C}{m-1}}$ 需要结合具体值分析。一般来说动作个数 $m$ 越多，估计偏高的程度越大。</p>
+<p>本文通过实验证明了传统的在线 Q-learning 出现估计偏高的问题是很普遍的：</p>
+<ul>
+<li><p>并不是只有特定的真实动作-值函数才会导致目标 Q 值函数出现估计偏高，不同的真实动作-值函数都会导致这种问题。</p>
+</li>
+<li><p>并不是阶数不够的动作-值逼近函数才会出现估计值偏高的问题，阶数高的动作-值逼近函数也会出现估计值偏高的问题，并且可能会更加严重。因为高阶的动作-值逼近函数会匹配所有的样本点，但是也存在过拟合问题，对于潜在的未被采集的样本点，可能估计偏离很大。</p>
+</li>
+</ul>
+<p>估计偏高的问题会随着训练过程不断传播，导致越来越严重，从而让训练过程发散，造成算法性能下降。</p>
+<h2 id="4-算法模型"><a href="#4-算法模型" class="headerlink" title="4. 算法模型"></a>4. 算法模型</h2><h3 id="4-1-Double-DQN-的改进"><a href="#4-1-Double-DQN-的改进" class="headerlink" title="4.1 Double DQN 的改进"></a>4.1 Double DQN 的改进</h3><p>结合 Double Q-learning 和 DQN 已有的结构，本文提出利用在线 Q 网络执行贪婪策略的动作选择，但是用目标 Q 网络对动作-值进行评估。Double DQN 的目标 Q 函数如下：</p>
+<script type="math/tex; mode=display">y_t^{DoubleDQN}  = r_{t+1} + \gamma Q(s_{t+1}, \mathop{argmax}_a Q(s_{t+1}, a; \theta_t), \theta_t^-)</script><p>对比 DQN 的目标 Q 函数：</p>
+<script type="math/tex; mode=display">y_t^{DQN} = r_{t+1} + \gamma \mathop{argmax}_a Q(s_{t+1}, a; \theta_{t}^-)</script><p>注意 Double DQN 的目标 Q 网络的参数更新与 Nature DQN 中的更新方式相同，也就是每隔一段周期，目标 Q 网络的参数直接复制为在线 Q 网络的参数的副本。</p>
+<h3 id="4-2-Double-DQN-和-DQN-的区别"><a href="#4-2-Double-DQN-和-DQN-的区别" class="headerlink" title="4.2 Double DQN 和 DQN 的区别"></a>4.2 Double DQN 和 DQN 的区别</h3><p>DQN 动作的选择和动作的评估是依托于同一个目标 Q 网络的，也就是说从目标 Q 网络中执行贪婪策略选择动作之后，继续用目标 Q 网络对该动作进行评估。</p>
+<p>然而 Double DQN 中动作的选择和动作的评估是解耦的，并不是依托于同一个网络。动作的选择依托的是在线 Q 网络，而动作的评估依托的是目标 Q 网络。也就是说先从在线 Q 网络中执行贪婪策略选择动作之后，再用目标 Q 网络对该动作重新进行评估。</p>
+<h2 id="5-工程设置上的调整"><a href="#5-工程设置上的调整" class="headerlink" title="5. 工程设置上的调整"></a>5. 工程设置上的调整</h2><ul>
+<li><p>将目标 Q 网络参数的更新周期从 10000 变成 30000，增大了更新周期。</p>
+</li>
+<li><p>$\epsilon$ -贪婪策略的超参数 $\epsilon$ 在学习时变成从 0.1 到 0.01，在评估时，用的是 $\epsilon = 0.001$。</p>
+</li>
+<li><p>给 Q 网络的最后一层加上偏置项，所有动作共享这个偏置项。</p>
+</li>
+</ul>
+<h1 id="二、-Dueling-DQN-优势函数-4"><a href="#二、-Dueling-DQN-优势函数-4" class="headerlink" title="二、 Dueling DQN: 优势函数 [4]"></a>二、 Dueling DQN: 优势函数 <a href="#id4">[4]</a></h1><p>这篇论文提出了针对 model-free RL 的 dueling network框架。它是对传统 DQN 架构层面上的改动，将基于状态的 V 函数（value function）和状态相关的优势函数（advantage function）分离。Advantage 函数的思想基于1993年 Baird 提出的 Advantage updating。除了传统的 V 函数外，引入的 Advantage 函数 <script type="math/tex">A(x, u)</script> 的定义是当采取动作 $u$ 相比于采取当前最优动作能多带来多少累积折扣奖励。简单粗暴得说，就是选这个动作比当前最优动作（或其它动作）好多少。</p>
+<h2 id="1-Dueling-DQN-简述"><a href="#1-Dueling-DQN-简述" class="headerlink" title="1. Dueling DQN 简述"></a>1. Dueling DQN 简述</h2><h3 id="1-1-Dueling-DQN-的改进点"><a href="#1-1-Dueling-DQN-的改进点" class="headerlink" title="1.1 Dueling DQN 的改进点"></a>1.1 Dueling DQN 的改进点</h3><p>Dueling DQN 是一种更适用于 model-free RL 的神经网络架构，如下图所示：<br><img src="/2019/09/16/DQN相关论文笔记（下）/DuelingDQN_architecture.png" alt="DuelingDQN_architecture"></p>
+<p>上图的第一行代表之前的 DQN 网络架构，第二行代表 Dueling DQN 网络架构。可以看出 Dueling 网络框架末端有两条分流（绿线前的红色柱子），分别代表状态函数和优势函数。不过 Dueling 网络框架只采用一套卷积层，也就是说状态函数和优势函数共享一套卷积网络参数。分流出来的状态函数和优势函数最后通过一层特殊的聚集层（图中的绿线）汇合成动作-值函数 Q。</p>
+<p>直觉上，Dueling 网络架构可以学习到哪些状态是有价值的，而不需要学习每个状态中每个动作的价值。可以预见到，引入优势函数后，对于<strong>新加入的相似动作</strong>可以很快学习，因为它们可以基于现有的状态函数来学习。另外这种 Dueling 网络架构可以运用在很多 model-free 的 RL 方法上，不仅局限于 DQN。</p>
+<p>论文中举了一个赛车游戏的例子：状态函数专注于远处（地平线）和分数，也就是长期目标，优势函数专注于附近障碍，也就是短期目标。这样状态函数和动作函数就能学习到不同时间层次的策略。这种学习的做法有几个好处：</p>
+<ul>
+<li><p>一是状态函数可以得到更多的学习机会，因为以往一次只更新一个动作对应的 Q 函数。</p>
+</li>
+<li><p>二是状态函数的泛化性更好，当动作越多时优势越明显。直观上看，当有新动作加入时，它并不需要从零开始学习。</p>
+</li>
+<li><p>三是因为 Q 函数在动作和状态维度上的绝对数值往往差很多，这会引起噪声和贪婪策略的突变，而用该方法可以改善这个问题。</p>
+</li>
+</ul>
+<p>因此，通过解耦计算 V(s)，找出对于那些任何行为都不会被影响的状态尤其有用。在这种情况下，不必计算每个动作的值。例如，向右或向左移动仅在存在碰撞风险时才去关注。而且，在大多数状态下，无论选择何种行动，对发生的事情没有任何影响。</p>
+<h3 id="1-2-Dueling-DQN-的来源"><a href="#1-2-Dueling-DQN-的来源" class="headerlink" title="1.2 Dueling DQN 的来源"></a>1.2 Dueling DQN 的来源</h3><p>早在1993年 Baird 就提出将状态函数和优势函数分开的概念。1995年 Harmon 他们发现优势函数学习比 Q-learning 收敛速度更快，然后在1996年 Harmon 和 Baird 就提出只依赖于优势函数的学习方法。</p>
+<p>Dueling 网络架构可以用在很多 Model-free 的 RL 方法上，不仅仅是 DQN 这类值函数逼近的方法，还可以运用在策略梯度一类的方法上。2000 年 Sutton 首先将优势函数用在策略梯度的方法上，2015 年 Schulman 等人估计优势函数的值来降低策略梯度算法的方差。</p>
+<h2 id="2-相关知识-1"><a href="#2-相关知识-1" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>关于 RL、 Q-learning、DQN 和 Double DQN 的基础知识可以参考前面的笔记，这里不再赘述。这里着重介绍一下优势 A 函数的定义和意义，以及优先经验回放方法（<strong>Prioritized Replay</strong>）。</p>
+<h3 id="2-1-优势函数"><a href="#2-1-优势函数" class="headerlink" title="2.1 优势函数"></a>2.1 优势函数</h3><p>优势函数的定义如下：</p>
+<script type="math/tex; mode=display">A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)</script><p>需要注意的是，策略 $\pi$ 的所有动作的平均优势为零，即：</p>
+<script type="math/tex; mode=display">\mathbb{E}_{a \sim \pi(s)}[A^\pi(s,a)] = 0</script><p>这个等式可以明显从状态函数 $V^\pi(s)$ 的定义看出：</p>
+<script type="math/tex; mode=display">V^\pi(s) = \mathbb{E}_{a \sim \pi(s)}[Q^\pi(s,a)]</script><p>直觉上，状态 V 函数是评估当前特定状态的价值，它是综合执行所有动作带来的价值后给出的期望（平均）价值。而动作-值 Q 函数评估的是特定的动作在该状态下带来的价值。很明显，动作-值 Q 函数减去状态 V 函数得到的优势 A 函数，表征的是一个动作在当前状态下的重要性。这种重要性忽略当前状态的价值，只强调动作本身具备多大的价值（相对于其他动作而言）。</p>
+<p>从公式的定义上来看，动作-值函数的值越大，优势函数的值也越大，似乎没有必要单独对优势函数进行学习。但这是针对所有动作的动作-值函数都能正确估计到当前状态的价值的情况下，也就是说估计的状态函数在不同的动作上是确定的并且是相等的。但是在利用动作-值函数进行学习的算法中，并不能保证针对每个动作输出的动作-值都包含着对当前状态的价值的正确估计。因此通过解耦估计，Dueling DQN 可以直观地了解哪些状态是（或不是）有价值的，<strong>在有价值的状态下找到优势函数 A 值最大的动作比单纯找到动作-值函数 Q 值最大的动作更有意义</strong>。</p>
+<h3 id="2-2-优先经验回放"><a href="#2-2-优先经验回放" class="headerlink" title="2.2 优先经验回放"></a>2.2 优先经验回放</h3><p>Schaul 在2016年将 <em>Prioritized replay</em> 方法和 DDQN 方法结合起来，并在 Atari 系列游戏取得当年最优的分数。</p>
+<p>优先经验回放背后的思想是提高那些具有高预期学习进度的经验元组的回放概率。计算学习进度的预期是通过 TD 误差的绝对值公式。经验池中 TD 误差绝对值越大的样本被抽取出来训练的概率越大，加快了最优策略的学习</p>
+<p>Dueling 网络结构可以作为很多创新性的算法的一个补充，也就是说无论算法模型采用均匀经验回放还是优先经验回放，采用这种网络机构都可以提升算法的性能。</p>
+<h2 id="3-算法模型"><a href="#3-算法模型" class="headerlink" title="3. 算法模型"></a>3. 算法模型</h2><h3 id="3-1-Dueling-网络的分流和汇合"><a href="#3-1-Dueling-网络的分流和汇合" class="headerlink" title="3.1 Dueling 网络的分流和汇合"></a>3.1 Dueling 网络的分流和汇合</h3><p>Dueling 网络结构的低层卷积层和 DQN 是相同的，但是在卷积层之后不是单个全连接层，而是两个分流的全连接层，分别估计价值函数和优势函数。然后两个分流的输出在下一层被合并成一个动作-值函数，为每个动作输出 Q 值。</p>
+<p>将两条全连接层的分流合并输出一个动作-值估计 Q 值需要考虑以下两个约束条件：</p>
+<ul>
+<li><p>优势函数满足 $\mathbb{E}_{a \sim \pi(s)} [A^\pi(s,a)]=0$</p>
+</li>
+<li><p>对于确定的策略，动作 $a^* = argmax_{a’ \in \mathcal{A}} Q(s, a’)$，满足 $Q(s, a^*) = V(s)$，因此 $A(s, a^*) = 0$</p>
+</li>
+</ul>
+<p>在 Dueling 网络架构中，全连接层状态网络分流可以表示为 $V(s;\theta, \beta)$，这是一个标量。另一条全连接层优势网络分流可以表示为 $A(s,a;\theta, \alpha)$，但这是一个矢量。参数 $\theta$ 表示网络卷积层的参数，$\alpha$ 和 $\beta$ 分别表示两条全连接层分流的参数。</p>
+<p>根据优势函数的定义，动作-值函数表示为：</p>
+<script type="math/tex; mode=display">Q(s,a;\theta,\alpha,\beta) = V(s;\theta,\beta) + A(s,a;\theta,\alpha)</script><p>注意到 $V(s;\theta,\beta)$ 是标量，因此计算时需要将其复制 $|\mathcal{A}|$ 次。</p>
+<h3 id="3-2-优势函数的限定"><a href="#3-2-优势函数的限定" class="headerlink" title="3.2 优势函数的限定"></a>3.2 优势函数的限定</h3><p>但是我们需要意识到上述公式，对状态函数和优势函数的估计并不总是正确的。对于一个确定的Q，有无数种 V 和 A 的组合可以得到 Q ，也就是说无法找到确定的 V 和 A。文中称之为可识别性问题（<em>identifiability issue</em>）。再用通俗一点的例子来讲，现在需要学习的是状态 V 网络和优势 A 网络，需要让这两个网络合起来的动作-值 Q 网络达到最优。但是可能状态 V 网络学习得并不好（假设学到了一个偏低的评估值），为了让动作-值 Q 网络符合目标网络的要求，优势 A 网络的学习也会产生一定的偏差（也就是学到一个偏高的估计值）。这样虽然看起来动作-值 Q 接近了目标值，但是状态网络和优势网络都学习得不好，等到实际运用网络的时候，状态网络和优势网络的弊端就会暴露出来，从而导致动作-值 Q 网络的性能低于预期。</p>
+<p><strong>因此我们需要对 A 进行一定的限定，强制我们的优势函数在选中的行动上具有0优势。也就是保证该状态下各种动作的优势函数大小排序关系不变的前提下，限制动作的优势值，缩小 Q 值的变化范围，从而加强状态函数 V 的学习。在 Dueling 网络架构下，状态 V 网络的学习本质上是要比优势 A 网络的学习要重要的。</strong></p>
+<p>论文中第一种做法是利用所有动作中优势函数的最大值对估计的优势函数进行限定，公式如下：</p>
+<script type="math/tex; mode=display">Q(s,a;\theta, \alpha, \beta) = V(s;\theta, \beta) + \left(A(s,a;\theta, \alpha) - \mathop{max}_{a' \in \mathcal{A}} A(s,a';\theta,\alpha) \right)</script><p><strong>个人觉得</strong>利用最大操作对优势函数进行限定可能存在限定过于严格的问题，也就是说动作-值函数的值过度依赖于状态函数的值，从而导致算法的探索性能下降（受限于局部最优状态）。</p>
+<p>因此论文提出了第二种做法，利用所有动作中优势函数的平均值对估计的优势函数进行限定，公式如下：</p>
+<script type="math/tex; mode=display">Q(s,a;\theta, \alpha, \beta) = V(s;\theta, \beta) + \left(A(s,a;\theta,\alpha) - \frac{1}{|\mathcal{A}|} \mathop{\sum}_{a' \in \mathcal{A}}(s,a';\theta,\alpha) \right)</script><p>另外论文还尝试了利用“最大化限定 + softmax Q 值”的方法，不过结果与第二种做法差别不是很大。</p>
+<p>加上对优势函数的限定，虽然会破坏原始公式的语义（因为多减了一个限定常数），但是这种限定的方法会让算法更加稳定，因为动作的优势值不必每次都需要学习达到最优值，只要达到平均优势值即可，同时加上对优势函数的限定也会加强状态函数的学习。</p>
+<p><strong>其实论文中并没有太多关于为什么对优势函数进行限定的解释，但限定的这个步骤实际上是论文最大的创新点之一。</strong></p>
+<h2 id="4-工程设置上的调整"><a href="#4-工程设置上的调整" class="headerlink" title="4. 工程设置上的调整"></a>4. 工程设置上的调整</h2><h3 id="4-1-网络结构"><a href="#4-1-网络结构" class="headerlink" title="4.1 网络结构"></a>4.1 网络结构</h3><p>网络的卷积层和Nature DQN 是一样的，也是三层卷积层，激活函数用的都是非线性激活函数。不过 Dueling 网络结构在卷积层之后分成状态流和优势流，都是用 512 个神经元的全连接层来表示。状态流输出一个状态值，优势流输出 N 个动作优势值（N 是动作的个数）。 </p>
+<h3 id="4-2-优化过程的调整"><a href="#4-2-优化过程的调整" class="headerlink" title="4.2 优化过程的调整"></a>4.2 优化过程的调整</h3><p>学习率比 Nature DQN 稍微降低，变成6.25 <em> 10-5。同时采用了 </em>gradient clipping* 技术，在反向传播时将梯度的绝对值钳制在小于或等于10的范围内。</p>
+<h3 id="4-3-优先经验回放"><a href="#4-3-优先经验回放" class="headerlink" title="4.3 优先经验回放"></a>4.3 优先经验回放</h3><p>采用 Schaul 等人在2016年提出的 <em>Prioritized Experience Replay</em> 优先经验回放技术。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/DQN/" rel="tag"># DQN</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/09/12/DQN相关论文笔记（上）/" rel="next" title="DQN相关论文笔记（上）">
+                  <i class="fa fa-chevron-left"></i> DQN相关论文笔记（上）
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/09/21/优先经验回放/" rel="prev" title="优先经验回放">
+                  优先经验回放 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、-Double-DQN：解决-Q-值估计偏高-3"><span class="nav-text">一、 Double DQN：解决 Q 值估计偏高 [3]</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Double-DQN-简述"><span class="nav-text">1. Double DQN 简述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-Q-learning-存在-Q-值估计偏高问题"><span class="nav-text">1.1 Q-learning 存在 Q 值估计偏高问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-本篇论文的工作"><span class="nav-text">1.2 本篇论文的工作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-估计误差引发过度估计证明"><span class="nav-text">3. 估计误差引发过度估计证明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-算法模型"><span class="nav-text">4. 算法模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Double-DQN-的改进"><span class="nav-text">4.1 Double DQN 的改进</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Double-DQN-和-DQN-的区别"><span class="nav-text">4.2 Double DQN 和 DQN 的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-工程设置上的调整"><span class="nav-text">5. 工程设置上的调整</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二、-Dueling-DQN-优势函数-4"><span class="nav-text">二、 Dueling DQN: 优势函数 [4]</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Dueling-DQN-简述"><span class="nav-text">1. Dueling DQN 简述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-Dueling-DQN-的改进点"><span class="nav-text">1.1 Dueling DQN 的改进点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-Dueling-DQN-的来源"><span class="nav-text">1.2 Dueling DQN 的来源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识-1"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-优势函数"><span class="nav-text">2.1 优势函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-优先经验回放"><span class="nav-text">2.2 优先经验回放</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法模型"><span class="nav-text">3. 算法模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Dueling-网络的分流和汇合"><span class="nav-text">3.1 Dueling 网络的分流和汇合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-优势函数的限定"><span class="nav-text">3.2 优势函数的限定</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-工程设置上的调整"><span class="nav-text">4. 工程设置上的调整</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-网络结构"><span class="nav-text">4.1 网络结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-优化过程的调整"><span class="nav-text">4.2 优化过程的调整</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-优先经验回放"><span class="nav-text">4.3 优先经验回放</span></a></li></ol></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

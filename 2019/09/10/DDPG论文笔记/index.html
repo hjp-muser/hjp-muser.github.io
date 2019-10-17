@@ -55,19 +55,19 @@
   };
 </script>
 
-  <meta name="description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
+  <meta name="description" content="1. 简述论文题目：《CONTINUOUS CONTROL WITH DEEP REINFORCEMENTLEARNING》。该论文提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
 <meta name="keywords" content="强化学习,DDPG">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DDPG论文笔记">
 <meta property="og:url" content="http://yoursite.com/2019/09/10/DDPG论文笔记/index.html">
 <meta property="og:site_name" content="Huangjp Blog">
-<meta property="og:description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
+<meta property="og:description" content="1. 简述论文题目：《CONTINUOUS CONTROL WITH DEEP REINFORCEMENTLEARNING》。该论文提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://yoursite.com/2019/09/10/DDPG论文笔记/OrnsteinUhlenbeck.png">
-<meta property="og:updated_time" content="2019-09-11T07:31:22.323Z">
+<meta property="og:updated_time" content="2019-10-02T06:05:40.003Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="DDPG论文笔记">
-<meta name="twitter:description" content="1. 简述提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
+<meta name="twitter:description" content="1. 简述论文题目：《CONTINUOUS CONTROL WITH DEEP REINFORCEMENTLEARNING》。该论文提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。">
 <meta name="twitter:image" content="http://yoursite.com/2019/09/10/DDPG论文笔记/OrnsteinUhlenbeck.png">
   <link rel="canonical" href="http://yoursite.com/2019/09/10/DDPG论文笔记/">
 
@@ -270,7 +270,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-11 15:31:22" itemprop="dateModified" datetime="2019-09-11T15:31:22+08:00">2019-09-11</time>
+                <time title="修改时间：2019-10-02 14:05:40" itemprop="dateModified" datetime="2019-10-02T14:05:40+08:00">2019-10-02</time>
               </span>
             
           
@@ -313,7 +313,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="1-简述"><a href="#1-简述" class="headerlink" title="1. 简述"></a>1. 简述</h2><p>提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。<br><a id="more"></a></p>
+        <h2 id="1-简述"><a href="#1-简述" class="headerlink" title="1. 简述"></a>1. 简述</h2><p>论文题目：《CONTINUOUS CONTROL WITH DEEP REINFORCEMENT<br>LEARNING》。该论文提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。<br><a id="more"></a></p>
 <h3 id="1-1-处理连续动作空间的问题"><a href="#1-1-处理连续动作空间的问题" class="headerlink" title="1.1 处理连续动作空间的问题"></a>1.1 处理连续动作空间的问题</h3><ul>
 <li><p>DQN存在的问题是只能处理低维度，离散的动作空间。</p>
 </li>
@@ -372,21 +372,20 @@
 <li><p>动作-值函数： $Q^{\pi}(s_t, a_t) = \mathbb{E}_{s_{i \gt t} \sim \rho^\pi, a_{i \gt t} \sim \pi}[R_t | s_t, a_t]$</p>
 </li>
 <li><p>动作-值函数的贝尔曼方程（迭代形式）： $Q^\pi(s_t, a_t)=\mathbb{E}_{s_{t+1} \sim \rho^\pi} \left[r(s_t, a_t) + \gamma \mathbb{E}_{a_{t+1} \sim \pi} [Q^\pi (s_{t+1}, a_{t+1})] \right]$ <br><br>如果动作策略是确定性策略，表示为 $\mu : \mathcal{S} \rightarrow \mathcal{A}$，则动作-值函数的贝尔曼方程的形式为：<br><span id="id2"></span></p>
-<script type="math/tex; mode=display">Q^\mu(s_{t}, a_{t}) = \mathbb{E}_{s_{t+1} \sim \rho^\mu} \left[ r(s_t, a_t) + \gamma Q^\mu(s_{t+1}, \mu (s_{t+1}))\right ]</script><p>&lt;/span&gt;</p>
-</li>
+<script type="math/tex; mode=display">Q^\mu(s_{t}, a_{t}) = \mathbb{E}_{s_{t+1} \sim \rho^\mu} \left[ r(s_t, a_t) + \gamma Q^\mu(s_{t+1}, \mu (s_{t+1}))\right ]</script></li>
 <li><p>假设用参数 $\theta^Q$ 去逼近动作-值函数并采用Q-learning，则定义损失函数如下：<br><span id="id3"></span></p>
-<script type="math/tex; mode=display">L(\theta^Q) = \mathbb{E}_{s_t \sim \rho^\beta, a_t \sim \beta} \left[(Q(s_t, a_t | \theta^Q) - y_t)^2 \right]</script><p>&lt;/span&gt;<br><span id="id4"></span></p>
-<script type="math/tex; mode=display">y_t = r(s_t, a_t) + \gamma Q(s_{t+1}, \mu(s_{t+1}) | \theta^Q)</script><p>&lt;/span&gt;<br><strong>注意虽然$y_t$中也含有$\theta^Q$，但是对$L(\theta^Q)$求梯度时，通常忽略$y_t$，不对其求导。</strong></p>
+<script type="math/tex; mode=display">L(\theta^Q) = \mathbb{E}_{s_t \sim \rho^\beta, a_t \sim \beta} \left[(Q(s_t, a_t | \theta^Q) - y_t)^2 \right]</script><p><span id="id4"></span></p>
+<script type="math/tex; mode=display">y_t = r(s_t, a_t) + \gamma Q(s_{t+1}, \mu(s_{t+1}) | \theta^Q)</script><p><strong>注意虽然$y_t$中也含有$\theta^Q$，但是对$L(\theta^Q)$求梯度时，通常忽略$y_t$，不对其求导。</strong></p>
 </li>
 </ul>
 <h2 id="3-算法"><a href="#3-算法" class="headerlink" title="3. 算法"></a>3. 算法</h2><p>DDPG算法基于DPG算法，并采纳DQN中的<a href="#id1">两个重要技巧</a>。接下来简单介绍一下基础算法DPG。</p>
-<h3 id="3-1-DPG算法"><a href="#3-1-DPG算法" class="headerlink" title="3.1 DPG算法"></a>3.1 DPG算法</h3><p>DPG算法采用确定性策略 $\mu(s | \theta^\mu)$，每一时刻都将状态映射成确定的动作，同时也采用actor-critic框架。critic用参数为$\theta^Q$的函数 $Q(s,a|\theta^Q)$表示，并通过Q-learning和贝尔曼方程的方式进行学习。actor对目标函数应用链式法则（即策略梯度）更新参数 $\theta^\mu$，：</p>
+<h3 id="3-1-DPG算法"><a href="#3-1-DPG算法" class="headerlink" title="3.1 DPG算法"></a>3.1 DPG算法</h3><p>DPG算法采用确定性策略 $\mu(s | \theta^\mu)$，每一时刻都将状态映射成确定的动作，同时也采用actor-critic框架。critic用参数为$\theta^Q$的函数 $Q(s,a|\theta^Q)$表示，并通过Q-learning和贝尔曼方程的方式进行学习。actor对目标函数应用链式法则（即策略梯度）更新参数 $\theta^\mu$：</p>
 <script type="math/tex; mode=display">
 \begin{aligned}
 \bigtriangledown_{\theta^\mu} J &\approx \mathbb{E}_{s_t \sim \rho^\beta} \left[ \bigtriangledown_{\theta^\mu}Q(s, a|\theta^Q) |_{s=s_t, a=\mu(s_t|\theta^\mu)} \right] \\
 &= \mathbb{E}_{s_t \sim \rho^\beta} \left[\bigtriangledown_a Q(s, a|\theta^Q)|_{s=s_t, a=\mu(s_t)} \bigtriangledown_{\theta^\mu}\mu(s|\theta^\mu)|_{s=s_t} \right]
 \end{aligned}</script><p>Q-learning采用的是异策略，行动策略表示为 $\beta$，目标策略表示为 $\mu$。 上述目标函数中，最外层是关于状态 $s_t$ 分布的平均，$s_t$ 就是通过执行 $\beta$ 策略采样来的。但是最里层动作-值函数如果展开成贝尔曼方程的形式，下一时刻采用的动作策略则是 $\mu$，如2.2节的<a href="#id2">第六条公式</a>。</p>
-<p>DPQ 采用 mini-batch的梯度更新规则。对于比较大的网络，采用 batch learning 是很难收敛的。</p>
+<p>DPG 采用 SGD 随机梯度更新规则。采用批梯度下降是很难收敛的。</p>
 <h3 id="3-2-DDPG算法"><a href="#3-2-DDPG算法" class="headerlink" title="3.2 DDPG算法"></a>3.2 DDPG算法</h3><p>绝大多数优化算法都是假设样本是独立且均匀分布的，但是强化学习采集的样本本身就是一个序列，所以相邻间的样本是有关联的，不满足假设条件。另外，通常是采用mini-batch更新的方式，而不是在线更新。</p>
 <p>为了解决样本相互关联的问题，DQN采用了经验回放池，具有固定大小，存储每次探索的 $(s_t, a_t, r_t, s_{t+1})$。当经验回放池满了之后，会丢弃最旧的数据，增加新采样数据。每次更新的时候，actor和critic都会统一从经验回放池中抽取一个mini-batch进行更新。经验回放池可以尽可能地设置得大一点，这样每次抽取的样本关联度会降低。</p>
 <p>如果直接按照2.2节的<a href="#id3">第七条公式</a>去更新网络 $Q(s, a|\theta^Q)$，在大多数环境中都是会发散的。<strong>因为该公式的计算目标值 $y_t$ 时也用了网络 $Q(s, a|\theta^Q)$ 的值。很明显，这个网络在还没有收敛的时候，作为目标的一部分进行学习，结果很容易发散。因为目标本身就好像在追求一个不稳定的值。</strong></p>
@@ -503,7 +502,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -521,7 +520,7 @@
       
       <div class="site-state-item site-state-tags">
         
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">标签</span>
         
       </div>

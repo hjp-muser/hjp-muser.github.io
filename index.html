@@ -226,6 +226,480 @@
   
   
   <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/16/DQN代码实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/10/16/DQN代码实现/" class="post-title-link" itemprop="url">DQN代码实现</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-10-16 19:09:31" itemprop="dateCreated datePublished" datetime="2019-10-16T19:09:31+08:00">2019-10-16</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-17 21:32:18" itemprop="dateModified" datetime="2019-10-17T21:32:18+08:00">2019-10-17</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/10/16/DQN代码实现/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/10/16/DQN代码实现/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>DQN强化学习方法系列主要是由两篇文章提出，分别是 <em>Playing Atari with Deep Reinforcement Learning</em> 和 <em>Human-level control through deep reinforcement learning</em>。这两篇文章讲述的具体方法在之前的博客 <a href="https://hjp-muser.github.io/2019/09/12/DQN%E7%9B%B8%E5%85%B3%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89/" target="_blank" rel="noopener">DQN相关论文笔记</a>中有过介绍，在这篇文章中分析DQN强化学习方法的代码实现细节。</p>
+<h2 id="1-算法为代码"><a href="#1-算法为代码" class="headerlink" title="1. 算法为代码"></a>1. 算法为代码</h2><p><img src="/2019/10/16/DQN代码实现/DQN_peseudocode.png" alt="DQN_algorithm"><br></p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/10/16/DQN代码实现/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/21/优先经验回放/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/09/21/优先经验回放/" class="post-title-link" itemprop="url">优先经验回放</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-21 16:14:01" itemprop="dateCreated datePublished" datetime="2019-09-21T16:14:01+08:00">2019-09-21</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-03 00:53:48" itemprop="dateModified" datetime="2019-10-03T00:53:48+08:00">2019-10-03</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/21/优先经验回放/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/09/21/优先经验回放/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>论文题目：<a href="http://arxiv.org/abs/1511.05952" target="_blank" rel="noopener">Prioritized Experience Replay</a></p>
+<h2 id="1-论文简述"><a href="#1-论文简述" class="headerlink" title="1. 论文简述"></a>1. 论文简述</h2><p>在 Nature DQN 和 Double DQN 论文中经验回放池的采样是基于均匀分布采样，一种更合理的方式应该考虑这些经验中哪些更具有对训练更有价值，也就是给这些经验值分配不同的优先级权重，在采样时这些重要的经验被抽取的概率对更大。DQN 论文中提及很早之前有研究做过一种 <strong>“Prioritized sweeping”</strong> 方法，就是实现经验回放的不均匀采样。本篇论文在前人的研究基础上提出一种新的框架——<strong>优先经验回放</strong>，使优先级更大的经验被选中的几率更大。“DQN + 优先经验回放”的方法在 Atari 游戏的测试中比 “DQN + 均匀经验回放”的方法更好（49个游戏有41个性能更优越）。<br></p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/09/21/优先经验回放/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/16/DQN相关论文笔记（下）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/09/16/DQN相关论文笔记（下）/" class="post-title-link" itemprop="url">DQN相关论文笔记（下）</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-16 01:56:03" itemprop="dateCreated datePublished" datetime="2019-09-16T01:56:03+08:00">2019-09-16</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-02 14:05:40" itemprop="dateModified" datetime="2019-10-02T14:05:40+08:00">2019-10-02</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/16/DQN相关论文笔记（下）/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/09/16/DQN相关论文笔记（下）/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>这篇笔记主要提及下面四篇关于DQN的著名论文的后两篇：</p>
+<p><span id="id1"> [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retrieved from <a href="http://arxiv.org/abs/1312.5602" target="_blank" rel="noopener">http://arxiv.org/abs/1312.5602</a></span></p>
+<p><span id="id2"> [2] Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., … Hassabis, D. (2015). Human-level control through deep reinforcement learning. Nature, 518(7540), 529–533. <a href="https://doi.org/10.1038/nature14236" target="_blank" rel="noopener">https://doi.org/10.1038/nature14236</a></span></p>
+<p><span id="id3"> [3] Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). Deep reinforcement learning with double Q-Learning. 30th AAAI Conference on Artificial Intelligence, AAAI 2016, 2094–2100.</span></p>
+<p><span id="id4"> [4] Wang, Z., Schaul, T., Hessel, M., Van Hasselt, H., Lanctot, M., &amp; De Frcitas, N. (2016). Dueling Network Architectures for Deep Reinforcement Learning. 33rd International Conference on Machine Learning, ICML 2016, 4(9), 2939–2947.<br></span></p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/09/16/DQN相关论文笔记（下）/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/09/12/DQN相关论文笔记（上）/" class="post-title-link" itemprop="url">DQN相关论文笔记（上）</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-12 22:47:13" itemprop="dateCreated datePublished" datetime="2019-09-12T22:47:13+08:00">2019-09-12</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-02 14:05:40" itemprop="dateModified" datetime="2019-10-02T14:05:40+08:00">2019-10-02</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/12/DQN相关论文笔记（上）/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/09/12/DQN相关论文笔记（上）/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>这篇笔记主要提及下面四篇关于DQN的著名论文的前两篇：</p>
+<p><span id="id1"> [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retrieved from <a href="http://arxiv.org/abs/1312.5602" target="_blank" rel="noopener">http://arxiv.org/abs/1312.5602</a></span></p>
+<p><span id="id2"> [2] Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., … Hassabis, D. (2015). Human-level control through deep reinforcement learning. Nature, 518(7540), 529–533. <a href="https://doi.org/10.1038/nature14236" target="_blank" rel="noopener">https://doi.org/10.1038/nature14236</a></span></p>
+<p><span id="id3"> [3] Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). Deep reinforcement learning with double Q-Learning. 30th AAAI Conference on Artificial Intelligence, AAAI 2016, 2094–2100.</span></p>
+<p><span id="id4"> [4] Wang, Z., Schaul, T., Hessel, M., Van Hasselt, H., Lanctot, M., &amp; De Frcitas, N. (2016). Dueling Network Architectures for Deep Reinforcement Learning. 33rd International Conference on Machine Learning, ICML 2016, 4(9), 2939–2947.<br></span></p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/09/12/DQN相关论文笔记（上）/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/11/hexo-next渲染数学公式/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -374,7 +848,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-11 15:38:06" itemprop="dateModified" datetime="2019-09-11T15:38:06+08:00">2019-09-11</time>
+                <time title="修改时间：2019-10-17 21:00:37" itemprop="dateModified" datetime="2019-10-17T21:00:37+08:00">2019-10-17</time>
               </span>
             
           
@@ -490,7 +964,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-11 15:31:22" itemprop="dateModified" datetime="2019-09-11T15:31:22+08:00">2019-09-11</time>
+                <time title="修改时间：2019-10-02 14:05:40" itemprop="dateModified" datetime="2019-10-02T14:05:40+08:00">2019-10-02</time>
               </span>
             
           
@@ -533,7 +1007,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="1-简述"><a href="#1-简述" class="headerlink" title="1. 简述"></a>1. 简述</h2><p>提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。<br></p>
+          <h2 id="1-简述"><a href="#1-简述" class="headerlink" title="1. 简述"></a>1. 简述</h2><p>论文题目：《CONTINUOUS CONTROL WITH DEEP REINFORCEMENT<br>LEARNING》。该论文提出了基于 deterministic policy gradient 的 DDPG(deep deterministic policy gradient) 算法，能够运用在连续的动作空间中，能够 learn policy “end to end”。<br></p>
           <!--noindex-->
           
             <div class="post-button text-center">
@@ -727,7 +1201,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -745,7 +1219,7 @@
       
       <div class="site-state-item site-state-tags">
         
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">标签</span>
         
       </div>
@@ -835,6 +1309,14 @@
     
       
         
+      
+    
+      
+    
+      
+    
+      
+    
       
     
       
