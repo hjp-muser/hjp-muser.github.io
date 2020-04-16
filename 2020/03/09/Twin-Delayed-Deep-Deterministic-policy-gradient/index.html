@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Fujimoto, S., Van Hoof, H., &amp;amp; Meger, D. (2018). Addressing Function Approximation Error in Actor-Critic Methods. 35th International Conference on Machine Learning, ICML 2018, 4, 2587–2601. 1. TD3">
+<meta name="keywords" content="强化学习,AC,DPG">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Twin Delayed Deep Deterministic policy gradient">
+<meta property="og:url" content="http://yoursite.com/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="Fujimoto, S., Van Hoof, H., &amp;amp; Meger, D. (2018). Addressing Function Approximation Error in Actor-Critic Methods. 35th International Conference on Machine Learning, ICML 2018, 4, 2587–2601. 1. TD3">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/td3.png">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.268Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Twin Delayed Deep Deterministic policy gradient">
+<meta name="twitter:description" content="Fujimoto, S., Van Hoof, H., &amp;amp; Meger, D. (2018). Addressing Function Approximation Error in Actor-Critic Methods. 35th International Conference on Machine Learning, ICML 2018, 4, 2587–2601. 1. TD3">
+<meta name="twitter:image" content="http://yoursite.com/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/td3.png">
+  <link rel="canonical" href="http://yoursite.com/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Twin Delayed Deep Deterministic policy gradient | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Twin Delayed Deep Deterministic policy gradient
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-03-09 18:48:03" itemprop="dateCreated datePublished" datetime="2020-03-09T18:48:03+08:00">2020-03-09</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Fujimoto, S., Van Hoof, H., &amp; Meger, D. (2018). Addressing Function Approximation Error in Actor-Critic Methods. <em>35th International Conference on Machine Learning, ICML 2018</em>, <em>4</em>, 2587–2601.</p>
+<h2 id="1-TD3-概念"><a href="#1-TD3-概念" class="headerlink" title="1. TD3 概念"></a>1. TD3 概念</h2><p>Q-learning 和 actor-critic 都存在状态值过估计以及收敛于次优策略的问题。本文依照 double Q-learning 的思想提出了 TD3 算法，研究了过估计误差和目标网络间的联系，以及通过延迟策略的更新来降低每次更新的误差，提高策略的性能。</p>
+<p>离散动作空间的过估计问题已经进行了研究，提出了 double Q-learning 算法。但是对于连续动作空间的 actor-critic 框架，过估计问题和误差的累积问题同样存在。过估计问题的来源主要是对带有噪声的状态值进行最大化，导致了最终目标产生过估计。另外，基于时间差分算法的强化学习算法，会利用一个本身不正确的状态估计值来进行下一次更新，导致误差累积。过估计和误差累积通常会导致一个本来很差的状态被估计成很高的状态值，产生次优策略。</p>
+<a id="more"></a>
+<p>本文主要有三个贡献：</p>
+<ul>
+<li>首先，本文展示了采用目标网络是降低误差累积和降低误差的重要方法。</li>
+<li>其次，本文提出了策略延迟更新的策略，即在状态估计收敛后再更新策略。</li>
+<li>最后，本文提出了一种新颖的正则方法。</li>
+</ul>
+<p>最终，本文将以上的方法与 DDPG 融合起来，产生的算法命名为 TD3 (Twin Delayed Deep Deterministic policy gradient algorithm)。</p>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>强化学习的目标：</p>
+<script type="math/tex; mode=display">
+R_t = \sum_{i=t}^{T} \gamma^{i-t} r(s_i,a_i)
+\tag{1}</script><p>DDPG 的目标求导：</p>
+<script type="math/tex; mode=display">
+\nabla_\phi J(\phi) = \mathbb{E}_{s \sim p_\pi} [\nabla_a Q^\pi(s,a)|_{a=\pi(s)} \nabla_\phi \pi_\phi(s)]
+\tag{2}</script><p>Q-learning 的时间差分更新公式：</p>
+<script type="math/tex; mode=display">
+Q^\pi(s,a) = r + \gamma \mathbb{E}_{s',a'}[Q^\pi(s',a')], \;\; a' \sim \pi(s')
+\tag{3}
+\label{3}</script><p>DQN 的目标函数：</p>
+<script type="math/tex; mode=display">
+y = r + \gamma Q_{\theta'}(s',a'), \;\; a' \sim \pi_{\phi'}(s')
+\tag{4}</script><p>其中 $\pi_{\phi’}$ 是由目标网络计算出来的，目标网络的参数更新方式为：</p>
+<script type="math/tex; mode=display">
+\theta' \leftarrow \tau \theta + (1-\tau) \theta'
+\tag{5}</script><h2 id="3-过估计偏差"><a href="#3-过估计偏差" class="headerlink" title="3. 过估计偏差"></a>3. 过估计偏差</h2><p>在离散空间的 Q-learning 算法，过估计偏差的来源比较明显。首先对于一个贪婪的目标函数：$y=r+\gamma \max_{a’}Q(s’,a’)$，如果该函数对误差 $\epsilon$ 比较敏感，则在 $Q(s’,a’)$ 上求最大值通常会大于实际的最大值：$\mathbb{E}_\epsilon[\max_{a’}(Q(s’,a’)+\epsilon)] \ge \max_{a’} Q(s’,a’)$ 。即使误差是零均值的，也会导致过高的动作值估计，并且通过贝尔曼方程传播，如公式$ \eqref{3}$，从而导致误差累积。</p>
+<p>在连续空间的 AC 框架中，过估计偏差并不是那么明显，但是它的确存在。</p>
+<h3 id="3-1-AC-中的过估计偏差"><a href="#3-1-AC-中的过估计偏差" class="headerlink" title="3.1 AC 中的过估计偏差"></a>3.1 AC 中的过估计偏差</h3><p>AC 框架中的策略更新依赖于 critic 对状态值的估计。但是状态值的估计过程中会存在过估计偏差，导致产生次优策略</p>
+<p>现在假设两种策略函数参数 $\phi_{approx}$ 和 $\phi_{true}$，对应的策略表示为 $\pi_{approx}$ 和 $\pi_{true}$ 。其中 $\phi_{approx}$ 的更新依赖于动作值估计函数 $Q_\theta(s,a)$，而 $\phi_{true}$ 的更新依赖于真实的动作值估计函数 $Q^\pi(s,a)$，但这是未知的。导数如下：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\phi_{approx} &= \phi + \frac{\alpha}{Z_1} \mathbb{E}_{s \sim p_\pi} [\nabla_\phi \pi_\phi(s) \nabla_a Q_\theta(s,a) |_{a=\pi_\phi(s)}] \\
+\phi_{true} &= \phi + \frac{\alpha}{Z_2} \mathbb{E}_{s \sim p_\pi} [\nabla_\phi \pi_\phi(s) \nabla_a Q^\pi(s,a) |_{a=\pi_\phi(s)}]
+\end{aligned}
+\tag{6}</script><p>其中 $Z_1$ 和 $Z_2$ 是规范化参数，即 $Z^{-1} | \mathbb{E}[\cdot] |=1$ 。通过规范化参数，噪声的存在就可以反映为学习步长的变化。</p>
+<p>由于梯度的方向只是局部的最大化方向，存在噪声 $\alpha \le \epsilon_1$（噪声足够小），那么 $\pi_{approx}$ 的近似动作值 $Q_\theta$ 就会大于 $\pi_{true }$ 。这可以理解为，$\pi_{approx}$ 和 $\pi_{ture}$ 都在近似动作值函数 $Q_\theta$ 图像的山腰，但是 $\pi_{approx}$ 前进的步数大于 $\pi_{ture}$，用公式表示如下：</p>
+<script type="math/tex; mode=display">
+\mathbb{E}[Q_\theta(s,\pi_{approx}(s))] \ge \mathbb{E}[Q_\theta(s,\pi_{true}(s))]
+\tag{7}
+\label{7}</script><p>同理，存在噪声 $\alpha \le \epsilon_2$（噪声足够小），那么 $\pi_{approx}$ 的真实动作值 $Q^\pi$ 就会小于 $\pi_{true }$ 。这可以理解为，$\pi_{approx}$ 和 $\pi_{ture}$ 都在真实动作值函数 $Q^\pi$ 图像的山顶，但是 $\pi_{approx}$ 前进的步数大于 $\pi_{ture}$，用公式表示如下：</p>
+<script type="math/tex; mode=display">
+\mathbb{E}[Q^\pi(s,\pi_{true}(s))] \ge \mathbb{E}[Q^\pi(s,\pi_{approx}(s))]
+\tag{8}
+\label{8}</script><p>同时，近似动作值函数对于 $\pi_{ture}$ 而言通常都是过估计的，也就是 $\mathbb{E}[Q_\theta(s,\pi_{ture}(s))] \ge \mathbb{E}[Q^\pi(s,\pi_{ture}(s))]$，结合公式 $\eqref{7}$ 和公式 $\eqref{8}$ ，可以得到：</p>
+<script type="math/tex; mode=display">
+\mathbb{E}[Q_\theta(s,\pi_{approx}(s))] \ge \mathbb{E}[Q^\pi(s,\pi_{approx}(s))]
+\tag{9}
+\label{9}</script><p>由公式 $\eqref{9}$ 可以知道，近似动作值函数对于学习的策略存在过估计，这种过估计偏差虽然在一个更新步骤中很小，但是经过非常多的更新步骤积累起来的估计偏差将会变得非常大。而过估计的动作值函数将会产生次优策略，从而导致新一轮的偏差出现。</p>
+<p>本文为了降低 critic 的过估计偏差，提出了 Clipped Double Q-learning 方法。</p>
+<h3 id="3-2-Clipped-Double-Q-learning"><a href="#3-2-Clipped-Double-Q-learning" class="headerlink" title="3.2 Clipped Double Q-learning"></a>3.2 Clipped Double Q-learning</h3><p>在 Double DQN 方法中，作者利用了一个目标网络对时间差分更新公式中的动作值进行估计，但是在采取行动策略时，用的是行为网络的贪婪策略。</p>
+<p>但是本文作者发现，这种方法对于 AC 框架的作用效果不大，目标网络和行为网络对状态值的估计相似，不能很好地解决过估计问题。本文作者提出，采用一对 actors $(\pi_{\phi_1},\pi_{\phi_2})$ 和一对 critics $(Q_{\theta_1},Q_{\theta_2})$，$\pi_{\phi_1}$ 的更新依赖于 $Q_{\theta_1}$，$\pi_{\phi_2}$ 的更新依赖于 $Q_{\theta_2}$，但是在时间差分更新公式中，目标 $y_1$ 依赖于 $Q_{\theta_2}$，目标 $y_2$ 依赖于 $Q_{\theta_1}$：</p>
+<script type="math/tex; mode=display">
+y_1 = r + \gamma Q_{\theta_2'}(s',\pi_{\phi_1}(s')) \\
+y_2 = r + \gamma Q_{\theta_1'}(s',\pi_{\phi_2}(s'))
+\tag{10}
+\label{10}</script><p>在公式 $\eqref{10}$ 中，由于$Q_{\theta_1}$ 和 $Q_{\theta_2}$ 并不是特别独立（参数更新依赖于对方以及使用同一个经验回放池），还是会存在过估计的问题，本文进而提出 Clipped Double Q-learning 方法：</p>
+<script type="math/tex; mode=display">
+y_1 = r + \gamma \min_{i=1,2} Q_{\theta_2'}(s',\pi_{\phi_1}(s'))
+\tag{11}
+\label{11}</script><p>公式 $\eqref{11}$ 可能会存在欠估计（underestimation）问题，但是欠估计的偏差不会在策略更新中传播（因为策略不会选一个欠优的动作）。对于 $Q_{\theta_2}$ 的更新，可以简单令 $y_2=y_1$ 。</p>
+<h2 id="4-解决高方差"><a href="#4-解决高方差" class="headerlink" title="4. 解决高方差"></a>4. 解决高方差</h2><p>除了过估计偏差的影响，高方差也会给策略梯度的更新带来影响。</p>
+<p>在使用时间差分公式进行更新时，实际上贝尔曼方程并没有完全满足，每次更新都会与真正的贝尔曼方程存在残差，称为 TD误差 $\delta(s,a)$：</p>
+<script type="math/tex; mode=display">
+Q_\theta(s,a) = r + \gamma \mathbb{E}[Q_\theta(s',a')] - \delta(s,a)
+\tag{12}
+\label{12}</script><p>对公式 $\eqref{12}$ 进行改写：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+Q_\theta(s_t,a_t) &= r_t + \gamma \mathbb{E}[Q_\theta(s_{t+1},a_{t+1})] - \delta_t \\
+&= r_t + \gamma \mathbb{E}[r_{t+1} + \gamma \mathbb{E}[Q_\theta(s_{t+2},a_{t+2}) - \delta_{t+1}]] - \delta_t \\
+&= \mathbb{E}_{s_i \sim p_\pi, a_i \sim \pi} \left[ \sum_{i=t}^T \gamma^{i-t}(r_i - \delta_i) \right]
+\end{aligned}
+\tag{13}
+\label{13}</script><p>从公式 $\eqref{13}$ 可以看出动作值估计 $Q_\theta$ 的方差不仅依赖于期望回报值，也依赖于 TD 误差总和。如果 $\gamma$ 比较大，那么 TD 总误差的方差是很大的。</p>
+<h3 id="4-1-目标网络和延迟更新"><a href="#4-1-目标网络和延迟更新" class="headerlink" title="4.1 目标网络和延迟更新"></a>4.1 目标网络和延迟更新</h3><p>目标网络是强化学习实现稳定更新的重要方法。目标网络给强化学习提供了一个稳定的目标。如果没有一个稳定的目标，每次更新过程中都会产生残差，并且积累，最终产生较大的方差。</p>
+<p>目标网络参数的更新可以采用软更新公式：</p>
+<script type="math/tex; mode=display">
+\theta' \leftarrow \tau \theta + (1-\tau)\theta'
+\tag{14}</script><p>目标网络在经历多次更新才能收敛，并且策略在高误差的状态估计下更新会产生发散的动作。本文认为策略网络的更新应该比状态网络的更新频率更低。也就是说在进行策略更新之前，应该先降低状态估计的误差。</p>
+<p>因此延迟更新是让策略更新在每隔 $d$ 个状态更新之后才进行。</p>
+<h3 id="4-2-对目标策略的正则化"><a href="#4-2-对目标策略的正则化" class="headerlink" title="4.2 对目标策略的正则化"></a>4.2 对目标策略的正则化</h3><p>如果策略采用的是确定性策略，存在的问题是确定性策略经常会受到状态估计的误差的影响，导致过拟合。本文通过对目标策略添加受限的噪声来进行正则化。</p>
+<script type="math/tex; mode=display">
+y = r + \gamma Q_{\theta'}(s',\pi_{\phi'}(s') + \epsilon), \\
+\epsilon \sim clip(\mathcal{N}(0,\sigma),-c,c)
+\tag{15}
+\label{15}</script><p>注意公式 $\eqref{15}$ 中目标策略所用的噪声 $\epsilon$ 是和探索策略所用的噪声 $\epsilon$ 区分开的。</p>
+<h2 id="5-算法伪代码"><a href="#5-算法伪代码" class="headerlink" title="5. 算法伪代码"></a>5. 算法伪代码</h2><p><img src="/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/td3.png" alt="td3" style="zoom:67%;"></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/AC/" rel="tag"># AC</a>
+            
+              <a href="/tags/DPG/" rel="tag"># DPG</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/03/08/Soft-actor-critic/" rel="next" title="Soft actor-critic">
+                  <i class="fa fa-chevron-left"></i> Soft actor-critic
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/03/17/Soft Q-learning (SQL)/" rel="prev" title="Soft Q-learning (SQL)">
+                  Soft Q-learning (SQL) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-TD3-概念"><span class="nav-text">1. TD3 概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-过估计偏差"><span class="nav-text">3. 过估计偏差</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-AC-中的过估计偏差"><span class="nav-text">3.1 AC 中的过估计偏差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Clipped-Double-Q-learning"><span class="nav-text">3.2 Clipped Double Q-learning</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-解决高方差"><span class="nav-text">4. 解决高方差</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-目标网络和延迟更新"><span class="nav-text">4.1 目标网络和延迟更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-对目标策略的正则化"><span class="nav-text">4.2 对目标策略的正则化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-算法伪代码"><span class="nav-text">5. 算法伪代码</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

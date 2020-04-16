@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Fujimoto, S., Meger, D., &amp;amp; Precup, D. (2019). Off-policy deep reinforcement learning without exploration. 36th International Conference on Machine Learning, ICML 2019, 2019-June, 3599–3609. 1. 论文概">
+<meta name="keywords" content="Q-learning,RL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Batch-Constrained deep Q-learning (BCQ)">
+<meta property="og:url" content="http://yoursite.com/2020/04/07/Batch Constrained deep Q-learning (BCQ)/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="Fujimoto, S., Meger, D., &amp;amp; Precup, D. (2019). Off-policy deep reinforcement learning without exploration. 36th International Conference on Machine Learning, ICML 2019, 2019-June, 3599–3609. 1. 论文概">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/04/07/Batch%20Constrained%20deep%20Q-learning%20(BCQ)/hexo/source/_posts/Batch%20Constrained%20deep%20Q-learning%20(BCQ)/batch_exp.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/07/Batch%20Constrained%20deep%20Q-learning%20(BCQ)/hexo/source/_posts/Batch%20Constrained%20deep%20Q-learning%20(BCQ)/BCQ.PNG">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.232Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Batch-Constrained deep Q-learning (BCQ)">
+<meta name="twitter:description" content="Fujimoto, S., Meger, D., &amp;amp; Precup, D. (2019). Off-policy deep reinforcement learning without exploration. 36th International Conference on Machine Learning, ICML 2019, 2019-June, 3599–3609. 1. 论文概">
+<meta name="twitter:image" content="http://yoursite.com/2020/04/07/Batch%20Constrained%20deep%20Q-learning%20(BCQ)/hexo/source/_posts/Batch%20Constrained%20deep%20Q-learning%20(BCQ)/batch_exp.png">
+  <link rel="canonical" href="http://yoursite.com/2020/04/07/Batch Constrained deep Q-learning (BCQ)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Batch-Constrained deep Q-learning (BCQ) | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/07/Batch Constrained deep Q-learning (BCQ)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Batch-Constrained deep Q-learning (BCQ)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-04-07 23:16:23" itemprop="dateCreated datePublished" datetime="2020-04-07T23:16:23+08:00">2020-04-07</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/07/Batch Constrained deep Q-learning (BCQ)/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/04/07/Batch Constrained deep Q-learning (BCQ)/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Fujimoto, S., Meger, D., &amp; Precup, D. (2019). Off-policy deep reinforcement learning without exploration. 36th International Conference on Machine Learning, ICML 2019, 2019-June, 3599–3609.</p>
+<h2 id="1-论文概要"><a href="#1-论文概要" class="headerlink" title="1. 论文概要"></a>1. 论文概要</h2><p>本文解决的问题是 Batch reinforcement learning，批强化学习。这种学习方法是从一个固定的数据集中学习出一个策略，不需要和环境发生进一步的交互。当与环境交互起来费时费力时，批强化学习就是关键的解决方案。批强化学习是介于 Off-policy 强化学习和模仿学习之间的一种方法。</p>
+<p>模仿学习的数据收集通过是第二个进程来完成，例如人亲自操作或者精细的编程来实现。假设收集过程中采用的策略是得当的，数据集的质量能得到保证，便可以直接应用模仿学习来从数据集中学习策略。但是大多数模仿学习在面对数据集中的不完整轨迹都会学习失败，或者还需要和环境进一步交互。</p>
+<p>大多数 off-policy 强化学习都可以称为 growing batch learning。一边使用数据集（或者称为经验池）中的数据进行学习，一边和环境交互产生新的数据加入数据集。但是当数据集中的数据与当前策略的数据分布差距较大时，off-policy 就会学习失败。本文将 off-policy 存在的主要问题归结于 extrapolation error（推断误差），即错误地估计状态动作对的值，本质上来源于经验池中的数据分布和当前策略不一致。比如，如果经验池中没有选择某个动作的样本，off-policy 就不能学到选择了该动作的策略。</p>
+<p>为了解决 off-policy 中的推断误差，本文提出了 Batch-Constrained deep Q-learning (BCQ) 算法，旨在于最大化奖励的同时缩小策略和经验池对状态动作对访问的差异。BCQ 算法的核心是利用 state-conditioned generative model （状态条件生成模型）来只产生先前见过的动作。将这个生成模型与 Q 网络结合，来选择与数据集分布最相似的价值最高的动作。本文还证明了这样的 batch-constrained条件，是要从不完整的数据集中学习有限、确定性 MDP 的值的无偏估计的必要条件。</p>
+<p>与模仿学习和 off-policy 强化学习不同，BCQ 算法不再需要与环境进行更深的探索，能够从专家数据集或固定的 suboptimal 数据集中学习。</p>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><h3 id="2-1-Bellman-operator-mathcal-T-pi"><a href="#2-1-Bellman-operator-mathcal-T-pi" class="headerlink" title="2.1 Bellman operator $\mathcal{T}^\pi$"></a>2.1 Bellman operator $\mathcal{T}^\pi$</h3><p>对于给定的策略 $\pi$，动作值函数可以通过贝尔曼算子来计算：</p>
+<script type="math/tex; mode=display">
+\mathcal{T}^\pi Q(s,a) = \mathbb{E}_{s'}[r + \gamma Q(s',\pi(s'))]
+\tag{1}</script><p>对于 $\gamma \in <a href="#ref1">0,1)$，论文 [[1]</a> 证明了贝尔曼算子是一个压缩映射，并存在唯一的不动点 $Q^\pi(s,a)$ 。</p>
+<p>最优动作值函数表示为 $Q^*(s,a) = \max_\pi Q^\pi (s,a)$ 。</p>
+<h3 id="2-2-DQN-amp-Q-learning"><a href="#2-2-DQN-amp-Q-learning" class="headerlink" title="2.2 DQN &amp; Q-learning"></a>2.2 DQN &amp; Q-learning</h3><p>对于连续的状态空间，将动作值函数表示为神经网络 $Q_\theta(s,a)$，并运用 Q-learning 方法对动作值函数进行训练的方法称为 DQN 算法。$Q_\theta(s,a)$ 的训练目标是：</p>
+<script type="math/tex; mode=display">
+y = r + \gamma Q_{\theta'}(s',\pi(s')), \;\; \pi(s') = \arg\max_a Q_{\theta'}(s',a)
+\tag{2}
+\label{2}</script><p>其中 $Q_{\theta’}(s,a)$ 表示目标动作值网络，参数 $\theta’$ 更新采用当前网络参数 $\theta$ 的滑动平均：$\theta’\leftarrow \tau \theta + (1-\tau)\theta$ 。</p>
+<p>Q-learning 是一个 off-policy 方法，负责采样的行为策略与学习的目标策略不同。原则上，off-policy 可以采用任意的行为策略。off-policy 方法的损失函数通常是最小化动作值网络估计与从经验回放池 $(s,a,r,s’) \in \mathcal{B}$ 采样的状态动作对的值的差异。</p>
+<h3 id="2-3-AC-amp-DDPG"><a href="#2-3-AC-amp-DDPG" class="headerlink" title="2.3 AC &amp; DDPG"></a>2.3 AC &amp; DDPG</h3><p>对于连续的动作空间，公式 $\eqref{2}$ 比较难以处理。AC 方法将策略也用神经网络表示 $\pi_\phi$ ，并通过另一个值网络的估计进行更新。策略网络称为 actor，值网络称为 critic 。</p>
+<p>DDPG 是一种 AC 方法，同时运用 Q-learning 对值网络进行估计，目标函数可以表示为：</p>
+<script type="math/tex; mode=display">
+\phi \leftarrow \arg\max_\phi \mathbb{E}_{s\in \mathcal{B}}[Q_\theta(s,\pi_\phi(s))]
+\tag{3}</script><p>$Q_\theta$ 可以采用 DQN 方法进行训练。</p>
+<h2 id="3-推断误差"><a href="#3-推断误差" class="headerlink" title="3. 推断误差"></a>3. 推断误差</h2><p>推断误差是指数据集的状态动作访问分布与当前策略的状态动作访问分布不一致。说白了就是不同策略采样的分布不同，在计算动作值函数的时候有关概率肯定有差别。</p>
+<p>off-policy 对推断误差的处理是，当前策略（例如greedy）利用的数据全部来源于行动策略（例如epsilon-greedy）时，在贝尔曼方程迭代计算动作值函数的时候应该乘上一连串重要性采样的权重。Q-learning 通过技巧（下一步的 Q 的动作由当前策略（例如greedy）给出）。</p>
+<p>推断误差主要来源于以下方面：</p>
+<ul>
+<li><p>数据缺失。如果状态动作对 $(s,a)$ 没有在数据集中，这部分的价值就无法更新，此时误差来源于相似数据的价值和逼近误差。例如，对下一个状态的动作值估计 $Q_\theta(s’,\pi(s’))$ 可能与实际值相差很大，原因是数据集中没有与 $(s’,\pi(s’))$ 相近的数据。</p>
+</li>
+<li><p>模型偏差。由于数据集是有限的，每个状态动作对的访问也是有限的，因此其分布会带来了偏差，计算贝尔曼方程时，期望是针对数据集 $\mathcal{B}$ 的数据分布，而不是真实的 MDP：</p>
+<script type="math/tex; mode=display">
+\mathcal{T}^\pi Q(s,a) \approx \mathbb{E}_{s'\sim \mathcal{B}} [r+\gamma Q(s',\pi(s'))]
+\tag{4}</script></li>
+<li><p>训练不匹配。即便有足够的数据，从数据集采样时是均匀采样，训练的损失函数：</p>
+<script type="math/tex; mode=display">
+y \approx \frac{1}{|\mathcal{B}|} \sum_{(s,a,r,s') \in \mathcal{B}} \| r + \gamma Q_{\theta'}(s',\pi(s')) - Q_\theta(s,a) \|^2
+\tag{5}
+\label{5}</script><p>当数据集中的数据分布与当前策略的分布不匹配时，对动作值的估计就会有误差。</p>
+</li>
+</ul>
+<p>需要注意的是，即便将公式 $\eqref{5}$ 的权重换成与当前策略相关，如果当前策略最高价值的状态动作对不在数据集中，依然会带来误差。</p>
+<p>当前很多 Off-policy 算法都没有考虑推断误差。很多 off-policy 方法能起作用，原因在于他们的数据集采样的都是最近策略的数据，和当前策略差别不大。但是，当面对数据集和当前策略数据分布很不一致的情况，就会表现糟糕。本文做了三个实验，设计了三种不同的数据集来测试 DDPG 面对数据集分布不匹配时的情况。</p>
+<ul>
+<li>Final buffer 。训练一个 behavioral DDPG算法100万步（加入了高斯噪声来保证充分探索）并将遇到的 transition 全部储存在经验池，保证足够的覆盖率。</li>
+<li>Concurrent 。在训练 behavioral DDPG（加入了高斯噪声来保证充分探索）的同时训练 off-policy 的一个 DDPG。它们俩都用 behavioral DDPG 采样的数据集训练。</li>
+<li>Imitation 。一个训练好的 behavioral DDPG 采样 100 万步，不做任何探索。</li>
+</ul>
+<p>最后，off-policy DDPG 在这三种数据集中的表现如下图所示，其中 True Value 是通过蒙特卡洛方法计算出来的：</p>
+<p><img src="/2020/04/07/Batch Constrained deep Q-learning (BCQ)/hexo\source\_posts\Batch Constrained deep Q-learning (BCQ)\batch_exp.png" alt="batch_exp" style="zoom: 80%;"></p>
+<p>可以看到，off-policy DDPG 表现都远差于 behavioral DDPG。即使对于 concurrent 任务，behavioral DDPG 和 off-policy DDPG 同时训练，两者也有很大的差距。这说明在稳定的状态分布下，初始策略的差异便可导致推断误差。在 final 任务中，off-policy 拥有覆盖面非常大的数据集，但是对值的估计依然不稳定，性能也很差。在 imitation 任务中，即使给出了专家数据集，off-policy 学到的都是非专家动作，导致值估计很快就发散了。</p>
+<p>虽然推断误差不一定是正偏的，但当推断误差与强化学习算法中的最大化相结合时，推断误差提供了一个噪音源，可导致持续的高估计偏差。在 on-policy 下，推断误差导致的过高估计，策略就会采集一些 uncertainty 的数据，对这些错误的状态探索之后，值估计就会慢慢修正。但是 off-policy 是基于数据集的，这些误差将会很难被消除。</p>
+<h2 id="4-算法推导"><a href="#4-算法推导" class="headerlink" title="4. 算法推导"></a>4. 算法推导</h2><p>当前的 off-policy 方法只管根据估计的动作值来选择动作，而不考虑动作值估计的准不准。如果在估计当前数据集中不存在的动作，将会带来很大的误差。但如果只选择那些在数据集中的动作空间，动作值就会估计得很准。</p>
+<p>为了解决推断误差的问题，本文基于一个简单的思想：选择策略的时候要使得状态动作对的分布与 batch 的相似。满足这个要求的策略称为：batch-constrained 策略。batch-constrained 策略有以下三个目标：</p>
+<ol>
+<li><p>最小化所选择的动作与 batch 中的数据的距离。</p>
+</li>
+<li><p>产生的状态数据是之前已经熟悉的。</p>
+</li>
+<li><p>最大化值函数。</p>
+</li>
+</ol>
+<p>其中目标 1 是最重要的。如果不限制在相关的 transition 下的话，值函数的估计就会很差，也就不能达到接下来的目标。因此本文在优化值函数的时候，引入了 future certainty 的衡量，同时加入距离的限制。本文的算法中是通过一个 state-conditioned generative model 来实现。该模型用一个网络来在一个小范围内最优地扰动生成的动作，并利用另一个 Q 网络来选择价值最高的动作。最后还利用了两个 Q 网络估计并取它们的 soft minimum 来作为价值估计的目标，目的是惩罚那些不熟悉的状态的值。</p>
+<p>为了便于分析，先从有限的 MDP 和表格型环境出发，再引入到连续环境的 BCQ 算法。</p>
+<h3 id="4-1-有限-MDP-引入推断误差"><a href="#4-1-有限-MDP-引入推断误差" class="headerlink" title="4.1 有限 MDP 引入推断误差"></a>4.1 有限 MDP 引入推断误差</h3><p>首先重写以下 Q-learning 的更新公式：</p>
+<script type="math/tex; mode=display">
+Q(s,a) \leftarrow (1-\alpha) Q(s,a) + \alpha (r+\gamma Q(s',\pi(s')))
+\tag{6}</script><p>其中 $\pi(s’) = \arg\max_{a’} Q(s’,a’)$ 。</p>
+<p>对于数据集 $\mathcal{B} $ 学习的 Q 函数，定义一个对应的 MDP 为 $M_\mathcal{B}$ 。真实的 MDP 记为 $M$ 。$M_\mathcal{B}$ 和 $M$ 具有相同的动作空间和状态空间，初始状态为 $s_{init}$，初始动作值记为 $Q(s,a)$。$M_\mathcal{B}$ 的转移概率 $p_\mathcal{B}(s’|s,a) = \frac{N(s,a,s’)}{\sum_{\tilde s N(s,a,\tilde s)}}$ ，其中 $N(s,a,s’)$ 表示在数据集 $\mathcal{B}$ 遇见 $N(s,a,s’)$ 的数量。如果 $\sum_{\tilde s} N(s,a,\tilde s) = 0$，则 $p_\mathcal{B}(s_{init}|s,a)=1$，并且 $r(s,a,s_{init})$ 被设置为 $Q(s,a)$ 的初始值。</p>
+<p><strong>定理 1：</strong> 从数据集 $\mathcal{B}$ 中采样进行 Q-learning 学习，在 $MDP_\mathcal{B}$ 下 Q-learning 最终会收敛到最优动作值函数。</p>
+<p>定义 $\epsilon_{MDP}$ 为有限 MDP 下的推断误差，数学意义是根据数据集 $\mathcal{B} $ 计算出的 $Q_\mathcal{B}^\pi$ 和根据真实 MDP 计算出的 $Q^\pi$ 的差值：</p>
+<script type="math/tex; mode=display">
+\epsilon_{MDP}(s,a) = Q^\pi(s,a) - Q_\mathcal{B}^\pi(s,a)
+\tag{7}</script><p>$\epsilon_{MDP}(s,a)$ 可以重新写成贝尔曼方程的形式： </p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\epsilon_{MDP}(s,a) &= \sum_{s'}(p_M(s'|s,a) - p_\mathcal{B}(s'|s,a)) \left( r(s,a,s')+\gamma\sum_{a'}\pi(a'|s')Q^\pi_{\mathcal{B}}(a',s') \right) \\
+&+ \sum_{s'}p_M(s'|s,a) \gamma \sum_{a'} \pi(a'|s') \epsilon_{MDP}(s',a')
+\end{aligned}
+\tag{8}
+\label{8}</script><p>这意味推断误差可以视为转移概率的差值的函数，其中动作值视为权重。如果选择一个策略使得两个转移概率的差距最小，那么推断误差也能达到最小。为了简便，重写公式 $\eqref{8}$ 如下：</p>
+<script type="math/tex; mode=display">
+\epsilon_{MDP}^\pi = \sum_s \mu_\pi(s) \sum_a \pi(a|s) |\epsilon_{MDP}(s,a)|
+\tag{9}</script><p>接下来推导消除推断误差的条件。</p>
+<p><strong>引理 1：</strong>对于所有的奖励函数，当且仅当对于所有的$s’\in S$ 、 $\mu_\pi(s) &gt; 0$、$\pi(a|s) &gt; 0$ ，满足$p_\mathcal{B}(s’|s,a) = p_M(s’|s,a)$，才能保证 $\epsilon_{MDP}^\pi = 0$ 。</p>
+<p>引理 1 告诉我们如果 $M_\mathcal{B}$ 和 $M$ 有相同的转移概率，那么策略的价值就可以被正确地评估。这就意味着如果一个策略只经历在数据集中的 transition，那么价值就能被正确估计。</p>
+<p>用数学语言来讲，定义一个 batch-constrained 策略 $\pi \in \Pi_\mathcal{B}$，其中 $\mu_\pi(s) &gt; 0$、$\pi(a|s) &gt; 0$ 并且所有的 $(s,a) \in \mathcal{B}$ 。同时定义一个 coherent 数据集 $\mathcal{B}$，满足所有的 $(s,a,s’) \in \mathcal{B}$ 并且 $s’ \in \mathcal{B}$， 除非 $s’$ 是结束状态。有了这样的数据集，就能保证 batch-constrained 策略的存在，它的价值就能被正确评估。</p>
+<p><strong>定理 2：</strong>对于确定性的 MDP 和任意的奖励函数，当且仅当策略 $\pi$ 是 batch-constrained 时，$\epsilon_{MDP}^\pi = 0$ 。另外，如果数据集 $\mathcal{B}$ 时 coherent 的，那么这样的策略一定存在，只要初始状态 $s_0 \in \mathcal{B}$ 。</p>
+<p>将 batch-constrained 策略 Q-learning 结合形成 batch-constrained Q-learning (BCQL)，其更新公式为：</p>
+<script type="math/tex; mode=display">
+Q(s,a) \leftarrow (1-\alpha)Q(s,a) + \alpha(r+\gamma \max_{a'\; s.t.\; (s',a')  \in\mathcal{B}} Q(s',a'))
+\tag{10}</script><p><strong>定理 3：</strong>给定学习率 $\alpha$ 的 Robbins-Monro 随机收敛条件，以及对环境标准的采样，BCQL 可以收敛到最优动作值函数 $Q^*$ 。</p>
+<p>定理 3 说明对于确定性的 MDP，以及 coherent 的数据集，BCQL 能够收敛到最优策略 $\pi^<em> \in \Pi_\mathcal{B}$，对所有 $\pi \in \Pi_\mathcal{B}$ 和 $(s,a) \in \mathcal{B}$ 满足 $Q^{\pi^</em>} \ge Q^\pi(s,a)$ 。</p>
+<p><strong>定理 4：</strong>给定确定性 MDP 和 coherent 数据集 $\mathcal{B}$，连同学习率 $\alpha$ 的 Robbins-Monro 随机收敛条件，BCQL 将会收敛到 $Q_\mathcal{B}^\pi(s,a)$，其中 $\pi^*(s) = \arg\max_{a \; s.t. \; (s,a) \in \mathcal{B}} Q^\pi_\mathcal{B}(s,a)$ 是最优 batch-constrained 策略。</p>
+<p>定理 4 说明 BCQL 能保证学习的策略优于任何的行动策略。与标准的 Q-learning 不同的是，BCQL 没有对状态动作对访问上的要求，只要求数据集是 coherent 的。</p>
+<h3 id="4-2-BCQ-算法"><a href="#4-2-BCQ-算法" class="headerlink" title="4.2 BCQ 算法"></a>4.2 BCQ 算法</h3><p>将 BCQL 算法拓展到连续环境，本文提出了 BCQ 算法。其中为了满足 Batch-constrained 的条件，BCQ 利用了一个生成模型。对于给定的状态，BCQ 利用生成模型来生成与 batch 相似的动作集合，并通过 Q 网络来选择价值最高的动作。另外，本文还对价值估计过程增加了对未来稀有的状态进行惩罚，与 Clipped Double Q-learning 算法 <a href="#ref2">[2]</a> 类似。最后，BCQ 能学到与数据集的状态动作对访问分布相似的策略。</p>
+<p>给定状态 $s$，本文将 $(s,a) $ 和数据集 $\mathcal{B}$ 中的状态动作对的相似度建模成条件概率 $P_\mathcal{B}^G(a|s)$ 。为了估计 $P_\mathcal{B}^G(a|s)$ ，本文采用了参数化的生成模型 $G_\omega(s)$，从中采样动作来逼近 $\arg\max_a P_\mathcal{B}^G(a|s)$ 。</p>
+<p>对于生成模型，本文采用了变分自动编码器（conditional variational auto-encoder, VAE）。为了提高生成动作的多样性，本文引入了扰动模型 $\xi_\phi(s,a,\Phi)$，对动作 $a$ 的扰动范围是 $[-\Phi,\Phi]$ 。此时策略可以表示为：</p>
+<script type="math/tex; mode=display">
+\pi(s) = \arg\max_{a_i+\xi_\phi(s,a_i,\Phi)} Q_\theta(s,a_i+\xi_\phi(s,a_i,\Phi)), \;\; \{a_i \sim G_\omega(s)\}_{i=1}^n
+\tag{11}</script><p>参数 $n$ 和 $\Phi$ 的选择让 BCQ 算法介于模仿学习和强化学习之间。当 $\Phi=0$ 且 $n=1$ 时，BCQ 就类似于模仿学习；当 $\Phi=a_\max-a_\min$ 且 $n \rightarrow \infty$ 时，BCQ 算法就类似于 Q-learning 算法。</p>
+<p>扰动模型 $\xi_\phi$ 的训练和 DDPG 算法的训练目标类似：</p>
+<script type="math/tex; mode=display">
+\phi \leftarrow \mathop{\arg\max}_\phi \sum_{(s,a)\in\mathcal{B}} Q_\theta(s,a+\xi_\phi(s,a,\Phi))
+\tag{12}</script><p>为了对未来一些不常见的状态进行惩罚，本文采用 Clipped Double Q-learning 算法 <a href="#ref2">[2]</a> 对动作值 $Q$ 进行估计，也就是训练两个动作值网络 $\{Q_{\theta_1},Q_{\theta_2}\}$，取它们的最小值作为动作值的估计。本文对 Clipped Double Q-learning 算法进行了一点改进，对两个动作值采用新的结合方式：</p>
+<script type="math/tex; mode=display">
+y = r+\gamma \max_{a_i} \left[ \lambda \min_{j=1,2} Q_{\theta'_j}(s',a_i) + (1-\lambda) \max_{j=1,2}Q_{\theta'_j}(s',a_i) \right]
+\tag{13}</script><p>其中超参数 $\lambda$ 是控制对不确定的状态的惩罚力度。当 $\lambda = 1$ 时，公式 $\eqref{13}$ 其实是另一篇论文 Clipped Double Q-learning 的做法 <a href="#ref2">[2]</a> ，也是本文的一作提出来的。</p>
+<p>算法和一般的 DQN 相比，BCQ 使用了两个 Q 网络和两个目标 Q 网络，一个扰动网络 $\xi_\phi$ 和对应的目标扰动网络以及一个 VAE 生成模型 $G_\omega(s )$。在训练时，首先从数据集中采样 transition，然后训练 VAE 模型，生成和 batch 中相似的 action，然后从生成器中采样，用扰动网络扰动动作的取值。最后更新 Q 网络和目标 Q 网络。</p>
+<p><img src="/2020/04/07/Batch Constrained deep Q-learning (BCQ)/hexo\source\_posts\Batch Constrained deep Q-learning (BCQ)\BCQ.PNG" alt="BCQ" style="zoom: 67%;"></p>
+<h2 id="5-工程设置"><a href="#5-工程设置" class="headerlink" title="5. 工程设置"></a>5. 工程设置</h2><h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><span id="#ref1">[1]</span> Bertsekas, D. P. and Tsitsiklis, J. N. Neuro-Dynamic Pro- gramming. Athena scientific Belmont, MA, 1996.</p>
+<p><span id="#ref2">[2]</span> Fujimoto, S., van Hoof, H., and Meger, D. Addressing func- tion approximation error in actor-critic methods. In Inter- national Conference on Machine Learning, volume 80, pp. 1587–1596. PMLR, 2018.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Q-learning/" rel="tag"># Q-learning</a>
+            
+              <a href="/tags/RL/" rel="tag"># RL</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/" rel="next" title="Trust Region Path Consistency Learning (Trust-PCL)">
+                  <i class="fa fa-chevron-left"></i> Trust Region Path Consistency Learning (Trust-PCL)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/04/09/学术网站汇总/" rel="prev" title="学术网站汇总">
+                  学术网站汇总 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-论文概要"><span class="nav-text">1. 论文概要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Bellman-operator-mathcal-T-pi"><span class="nav-text">2.1 Bellman operator $\mathcal{T}^\pi$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-DQN-amp-Q-learning"><span class="nav-text">2.2 DQN &amp; Q-learning</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-AC-amp-DDPG"><span class="nav-text">2.3 AC &amp; DDPG</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-推断误差"><span class="nav-text">3. 推断误差</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-算法推导"><span class="nav-text">4. 算法推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-有限-MDP-引入推断误差"><span class="nav-text">4.1 有限 MDP 引入推断误差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-BCQ-算法"><span class="nav-text">4.2 BCQ 算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-工程设置"><span class="nav-text">5. 工程设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

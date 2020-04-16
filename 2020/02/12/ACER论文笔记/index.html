@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="1. ACER 概念ACER 就是将 Actor-Critic 和 experience replay 结合起来的强化学习方法。本文 [1] 提出了几种新的技术：带偏差纠正的截断重要性采样、随机 dueling 网络结构、一种新的置信域策略优化方法。 提出 ACER 的概念源于智能体与环境交互的代价高昂，需要减少仿真次数，提高数据的样本利用率。ACER 的出现旨在于设计一个稳定的、样本利用率高的">
+<meta name="keywords" content="强化学习,AC,ACER">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ACER论文笔记">
+<meta property="og:url" content="http://yoursite.com/2020/02/12/ACER论文笔记/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="1. ACER 概念ACER 就是将 Actor-Critic 和 experience replay 结合起来的强化学习方法。本文 [1] 提出了几种新的技术：带偏差纠正的截断重要性采样、随机 dueling 网络结构、一种新的置信域策略优化方法。 提出 ACER 的概念源于智能体与环境交互的代价高昂，需要减少仿真次数，提高数据的样本利用率。ACER 的出现旨在于设计一个稳定的、样本利用率高的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/02/12/ACER论文笔记/discree_acer.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/12/ACER论文笔记/SDNs.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/12/ACER论文笔记/continuous_acer.png">
+<meta property="og:updated_time" content="2020-03-04T04:54:03.949Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ACER论文笔记">
+<meta name="twitter:description" content="1. ACER 概念ACER 就是将 Actor-Critic 和 experience replay 结合起来的强化学习方法。本文 [1] 提出了几种新的技术：带偏差纠正的截断重要性采样、随机 dueling 网络结构、一种新的置信域策略优化方法。 提出 ACER 的概念源于智能体与环境交互的代价高昂，需要减少仿真次数，提高数据的样本利用率。ACER 的出现旨在于设计一个稳定的、样本利用率高的">
+<meta name="twitter:image" content="http://yoursite.com/2020/02/12/ACER论文笔记/discree_acer.png">
+  <link rel="canonical" href="http://yoursite.com/2020/02/12/ACER论文笔记/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>ACER论文笔记 | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/12/ACER论文笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">ACER论文笔记
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-02-12 12:50:32" itemprop="dateCreated datePublished" datetime="2020-02-12T12:50:32+08:00">2020-02-12</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-04 12:54:03" itemprop="dateModified" datetime="2020-03-04T12:54:03+08:00">2020-03-04</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/12/ACER论文笔记/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/02/12/ACER论文笔记/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-ACER-概念"><a href="#1-ACER-概念" class="headerlink" title="1. ACER 概念"></a>1. ACER 概念</h2><p>ACER 就是将 Actor-Critic 和 experience replay 结合起来的强化学习方法。本文 <a href="#ref1">[1]</a> 提出了几种新的技术：带偏差纠正的截断重要性采样、随机 dueling 网络结构、一种新的置信域策略优化方法。</p>
+<p>提出 ACER 的概念源于智能体与环境交互的代价高昂，需要减少仿真次数，提高数据的样本利用率。ACER 的出现旨在于设计一个稳定的、样本利用率高的 actor-critic 方法。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>假设可微分策略符号为 $\pi_\theta(a_t|x_t)$，其中 $x_t$ 是状态输入，策略梯度可以表示为：</p>
+<script type="math/tex; mode=display">
+g = \mathbb{E}_{x_0:\infty, a_0:\infty} \left[ \sum_{t\ge0} A^\pi(x_t,a_t)\nabla_\theta \log\pi_\theta(a_t|x_t) \right]
+\tag{1}</script><p>论文 <a href="#ref2">[2]</a> 的 Proposition 1 提出，可以将 $A^\pi(x_t,a_t)$ 替换为 $Q^\pi(x_t,a_t)$、折扣回报 $R_t$ 或者时间差分 $r_t+\gamma V^\pi(x_t+1)-V^\pi(x_t)$，不会引入偏差，只是四种式子的方差不一样。</p>
+<p>通常直接计算折扣回报 $R_t$ 会引入较大的方差，但是只有较小的偏差。而使用函数逼近状态函数则会引入较大偏差，但是只有较小的方差。通过结合 $R_t$ 和函数逼近两种方法，即保证较小偏差也维持固定方差是 ACER 背后的设计思想。</p>
+<p>为了对偏差和方差的权衡，A3C 论文中提出了 $k$-step 回报的方法，通过结合 $k$ 步的奖励以及函数逼近来对方差和偏差进行折衷：</p>
+<script type="math/tex; mode=display">
+\hat{g}^{A3C} = \sum_{t\ge0} \left( \left( \sum_{i=0}^{k-1}\gamma^ir_{t+i} \right) + \gamma^k V_{\theta_v}^\pi(x_{t+k}) - V_{\theta_v}^\pi(x_t) \right) \nabla_\theta \log\pi_\theta(a_t|x_t)
+\tag{2}</script><p>重要性采样是离线强化学习方法中常见的技术，用于控制方差和训练的稳定性。假设当前从经验回放池中采样的一段轨迹为 $\{x_0,a_0,r_0,\mu(\cdot|x_0),\cdots,x_k,a_k,r_k,\mu(\cdot|x_k)\}$，其中 $\mu$ 是行为策略，则使用重要性采样因子的策略梯度为：</p>
+<script type="math/tex; mode=display">
+\hat{g}^{imp} = \left( \prod_{t=0}^k \rho_t \right) \sum_{t=0}^k \left( \sum_{i=0}^k \gamma^i r_{t+i} \right) \nabla_\theta \log \pi_\theta(a_t|x_t)
+\tag{3}</script><p>$\rho_t$ 就是重要性因子：</p>
+<script type="math/tex; mode=display">
+\rho_t = \frac{\pi(a_t|x_t)}{\mu(a_t|x_t)}
+\tag{4}</script><h2 id="3-具体算法"><a href="#3-具体算法" class="headerlink" title="3. 具体算法"></a>3. 具体算法</h2><h3 id="3-1-离散-ACER"><a href="#3-1-离散-ACER" class="headerlink" title="3.1 离散 ACER"></a>3.1 离散 ACER</h3><p>重要性采样是离线强化学习方法中常见的技术，用于控制方差和训练的稳定性。假设当前从经验回放池中采样的一段轨迹为 $\{x_0,a_0,r_0,\mu(\cdot|x_0),\cdots,x_k,a_k,r_k,\mu(\cdot|x_k)\}$，其中 $\mu$ 是行为策略，则使用重要性采样因子的策略梯度为：</p>
+<script type="math/tex; mode=display">
+\hat{g}^{imp} = \left( \prod_{t=0}^k \rho_t \right) \sum_{t=0}^k \left( \sum_{i=0}^k \gamma^i r_{t+i} \right) \nabla_\theta \log \pi_\theta(a_t|x_t)\tag{5}</script><p>$\rho_t$ 就是重要性因子：</p>
+<script type="math/tex; mode=display">
+\rho_t = \frac{\pi(a_t|x_t)}{\mu(a_t|x_t)}\tag{6}</script><p>上面提到的重要性采样虽然不会带来偏差，但是会引来很大的方差，因为式子中包含无界限的重要性因子 $\rho_t$ 的连乘操作。可以对重要性采样因子进行截断，这是一种解决办法。Degris 提出了另一种利用边缘状态函数的方法。</p>
+<h4 id="3-1-1-Marginal-value-function"><a href="#3-1-1-Marginal-value-function" class="headerlink" title="3.1.1 Marginal value function"></a>3.1.1 Marginal value function</h4><p>Degris <a href="#ref3">[3]</a> 提出利用极限分布上的边缘状态函数来逼近策略梯度：</p>
+<script type="math/tex; mode=display">
+g^{marg} = \mathbb{E}_{x_t \sim \beta, a_t \sim \mu} [\rho_t \nabla_\theta \log \pi_\theta(a_t|x_t)Q^\pi(x_t,a_t)]
+\tag{7}
+\label{7}</script><p>$\beta(x)$ 是行动策略 $\mu$ 的极限分布：$\beta(x) = lim_{t \rightarrow \infty} P(x_t=x|x_0,\mu)$，上式中没有重要性因子的连乘，只需要对边缘重要性因子 $\rho_t$ 进行估计，因此可以降低方差。</p>
+<h4 id="3-1-2-Retrace"><a href="#3-1-2-Retrace" class="headerlink" title="3.1.2 Retrace"></a>3.1.2 Retrace</h4><p>为了估计 $Q^\pi(x_t,a_t)$，本文使用了 Retrace($\lambda$) <a href="#ref3">[4]</a> 技术。假定一段由行为策略 $\mu$ 采样的轨迹，Retrace($\lambda$) 估计方法可以表示为：</p>
+<script type="math/tex; mode=display">
+Q^{ret}(x_t, a_t) = r_t + \gamma \overline{\rho}_{t+1}[Q^{ret}(x_{t+1},a_{t+1})-Q(x_{t+1},a_{t+1})] + \gamma V(x_{t+1})
+\tag{8}</script><p>上式的 $\lambda = 1$。其中 $\hat{\rho}_t$ 是截断重要性因子，$\hat{\rho}_t = min\{c,\rho_t\}$，$\rho_t = \frac{\pi(a_t|x_t)}{\mu(a_t|x_t)}$，Q 是当前对 $Q^\pi$ 的估计。在论文 <a href="#ref4">[4]</a> 中一经证明 Retrace 技术拥有较低的方差，并且对于 tabular 强化学习，任意的行为策略都能使目标策略的状态函数收敛。</p>
+<p>为了对 $Q$ 进行估计，采用双头输出的卷积网络，一头输出动作状态的估计值 $Q_{\theta_v}(x_t,a_t)$，另一头输出策略 $\pi_\theta(a_t|x_t)$ 。为了获得$g^{marg}$，ACER 采用 $Q^{ret}$ 来估计 $Q^\pi$ 。为了对 $Q_{\theta_v}(x_t,a_t)$ 进行学习，本文利用 $Q^{ret}$ 为目标函数，建立均方差损失函数来对参数 $\theta_v$ 进行学习：</p>
+<script type="math/tex; mode=display">
+(Q^{ret}(x_t,a_t)-Q_{\theta_v}(x_t,a_t))\nabla_{\theta_v} Q_{\theta_v}(x_t,a_t)
+\tag{9}</script><p>采用 $Q^{ret}$ 有两个好处：一是降低策略梯度的偏差，而是加快 critic 的学习。</p>
+<h4 id="3-1-3-bias-correction"><a href="#3-1-3-bias-correction" class="headerlink" title="3.1.3 bias correction"></a>3.1.3 bias correction</h4><p>公式 ($\ref{7}$) 中的边缘重要性因子可能估计比较大，导致训练不稳定。为了更好地降低策略梯度的方差，本文提出一种截断的重要性因子，并引入一个修正项，如下公式所示（公式 ($\ref{7}$) 中的 $\mathbb{E}_{x_t \sim \beta, a_t \sim \mu}$ 简写为 $\mathbb{E}_{x_t,a_t}$）：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+g^{marg} &= \mathbb{E}_{x_t,a_t} [\rho_t \nabla_\theta \log \pi_\theta(a_t|x_t)Q^\pi(x_t,a_t)] \\ 
+&= \mathbb{E}_{x_t} \left[ \mathbb{E}_{a_t}[\overline{\rho}_t \nabla_\theta \log \pi_\theta(a_t|x_t)Q^\pi(x_t,a_t)] + \mathbb{E}_{a \sim \pi} \left( \left[ \frac{\rho_t(a)-c}{\rho_t(a)} \right]_+ \nabla_\theta \log \pi_\theta(a|x_t)Q^\pi(x_t,a) \right) \right]
+\end{aligned}
+\tag{10}
+\label{10}</script><p>其中截断重要性因子 $\overline{\rho}_t = \min\{c,\rho_t\}$，$\rho_t=\frac{\pi(a_t|x_t)}{\mu(a_t|x_t)}$。另外关于动作 $a \sim \pi$ 有 $\rho_t(a)=\frac{\pi(a|x_t)}{\mu(a|x_t)}$，并且 $[x]_+$ 表示只有当 $x&gt;0$ 时，$[x]_+ = x$，否则等于 0。</p>
+<p>公式 ($\ref{10}$) 的第一项表示策略梯度估计的方差被限制了，第二项表示修正项，保证估计是无偏的。注意到第二项中只有当 $\rho_t(a) &gt; c$ 时偏正项起作用。假设我们选取较大的 $c$ 值，只有当公式 ($\ref{7}$) 中的策略梯度估计方差非常大时，修正项才会起作用。从公式 ($\ref{10}$) 中可以知道第一项截断权重的最大值为 $c$，第二项修正权重的最大值为 1。</p>
+<p>本文将修正项中的 $Q^\pi(x_t,a)$ 用神经网络的输出值 $Q_{\theta_v}(x_t,a_t)$ 进行逼近，而第一项依然用 $Q^{ret}$，最终公式 ($\ref{10}$) 变成以下形式，也就是本文提出的带偏差纠正的截断重要性采样技术：</p>
+<script type="math/tex; mode=display">
+\hat{g}^{marg} = \mathbb{E}_{x_t} \left[ \mathbb{E}_{a_t}[\overline{\rho}_t \nabla_\theta \log \pi_\theta(a_t|x_t)Q^{ret}(x_t,a_t)] + \mathbb{E}_{a \sim \pi} \left( \left[ \frac{\rho_t(a)-c}{\rho_t(a)} \right]_+ \nabla_\theta \log \pi_\theta(a|x_t)Q_{\theta_v}(x_t,a) \right) \right]
+\tag{11}
+\label{11}</script><p>公式 ($\ref{11}$) 带有 Markov 过程的平稳分布的期望，可以通过行为策略 $\mu$ 的采样轨迹来取均值逼近。因此 ACER 的策略梯度逼近公式为：</p>
+<script type="math/tex; mode=display">
+\hat{g}_t^{acer} = \overline{\rho}_t \nabla_\theta \log \pi_\theta(a_t|x_t)[Q^{ret}(x_t,a_t)-V_{\theta_v}(x_t)] \\
+\;\;\;\;\;\;\;\;\;\;\;  + \mathbb{E}_{a \sim \pi} \left( \left[ \frac{\rho_t(a)-c}{\rho_t(a)} \right]_+ \nabla_\theta \log \pi_\theta(a|x_t) [Q_{\theta_v}(x_t,a)-V_{\theta_v}(x_t)]\right) 
+\tag{12}
+\label{12}</script><p>注意到，当 $c=\infty$ 时，公式 ($\ref{12}$) 就相当于只有第一项，当 $c = 0$ 时，公式 ($\ref{12}$) 就相当于只有第二项。</p>
+<h4 id="3-1-4-置信域策略优化"><a href="#3-1-4-置信域策略优化" class="headerlink" title="3.1.4 置信域策略优化"></a>3.1.4 置信域策略优化</h4><p>actor-critic 框架的方法经常会出现较大的方差，本文结合 TRPO 中的置信域优化的思想，将 actor-critic 框架和置信域优化结合起来，限制每次更新的幅度。</p>
+<p>TRPO 中需要反复求解费舍尔向量乘积，需要非常大的计算量。本文不用像 TRPO 那样约束新策略与旧策略相近，而是通过维护一个平均策略网络，表示旧策略的滑动平均，并且强制更新后的新策略不能偏离这个均值太远。</p>
+<p>首先将策略网络分成两个部分，一个是分布类型 $f$，另一个是深度神经网络输出，代表这个分布的统计特性 $\phi_\theta(x)$。也就是说策略可以表示成：$\pi(\cdot|x)=f(\cdot|\phi_\theta(x))$。为了对平均策略网络 $\phi_{\theta_a}$ 进行更新，本文采用软更新的方法，即 $\theta_a = \alpha \theta_a + (1-\alpha)\theta$ 。</p>
+<p>接下来，将公式 ($\ref{12}$) 用 $\phi_\theta$ 表示：</p>
+<script type="math/tex; mode=display">
+\hat{g}_t^{acer} = \overline{\rho}_t \nabla_{\phi_\theta(x_t)} \log f(a_t|\phi_\theta(x))[Q^{ret}(x_t,a_t)-V_{\theta_v}(x_t)] \\
+\;\;\;\;\;\;\;\;\;\;\;  + \mathbb{E}_{a \sim \pi} \left( \left[ \frac{\rho_t(a)-c}{\rho_t(a)} \right]_+ \nabla_{\phi_\theta(x_t)} \log f(a|\phi_\theta(x)) [Q_{\theta_v}(x_t,a)-V_{\theta_v}(x_t)]\right) 
+\tag{13}
+\label{13}</script><p>为了进行置信域优化，总共分成两个步骤。</p>
+<ul>
+<li>解决带 KL 散度约束的优化问题</li>
+</ul>
+<p>结合平均策略网络和策略网络，构造二者的 KL 散度约束，如下公式所示：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+& \mathop{minimize}_z \;\; \frac{1}{2} \| \hat{g}_t^{acer} - z \|_2 ^ 2 \\
+& subject \; to  \;\;  \nabla_{\phi_\theta(x_t)} D_{KL}[f(\cdot|\phi_{\theta_a}(x_t)) \| f(\cdot|\phi_\theta(x_t))]^T z \le \delta
+\end{aligned}
+\tag{14}
+\label{14}</script><p>令 $k = \nabla_{\phi_\theta(x_t)}D_{KL}[f(\cdot|\phi_{\theta_a}(x_t)) | f(\cdot|\phi_\theta(x_t))]$ ，根据 KKT 条件和拉格朗日乘法，很容易解得 $z$ 的最优值为：</p>
+<script type="math/tex; mode=display">
+z^* = \hat{g}_t^{acer} - max \left\{ 0,\frac{k^T \hat{g}_t^{acer} - \delta}{\|k\|_2^2} \right\}k
+\tag{15}
+\label{15}</script><p>公式 ($\ref{14}$) 的约束可以理解为策略梯度的变化量不能超过范围 $\delta$，$k$ 表示策略梯度变化率，$z$ 表示策略梯度。</p>
+<p>如果约束满足，则策略梯度没有产生任何改变。否则策略梯度沿着 $k$ 的方向降低变化。</p>
+<ul>
+<li>后向传播</li>
+</ul>
+<p>$z^<em>$ 是关于 $\phi_{\theta}$ 的最优策略梯度，根据链式传播原则，神经网络中的参数可以通过后向传播更新：$\frac{\partial \phi_\theta(x)}{\partial \theta} z^</em>$ 。</p>
+<h4 id="3-1-5-伪代码"><a href="#3-1-5-伪代码" class="headerlink" title="3.1.5 伪代码"></a>3.1.5 伪代码</h4><p><img src="/2020/02/12/ACER论文笔记/discree_acer.png" alt="discree_acer"></p>
+<p>从主算法中可以看出，先采用 ACER on-policy 算法，然后再根据回放比进行 $n$ 次 ACER off-policy 算法。</p>
+<p>注意算法 2 中有一处的赋值 $\mu(\cdot|x_i) \leftarrow f(\cdot|\phi_{\theta’}(x_i))$，应该是作者在ACER on-policy 算法中故意让行为策略等于目标策略。要么就是笔误，右侧可能是 $f(\cdot|\phi_{\theta_a}(x_i))$ 。不过无所谓，问题不大。</p>
+<h3 id="3-2-连续-ACER"><a href="#3-2-连续-ACER" class="headerlink" title="3.2 连续 ACER"></a>3.2 连续 ACER</h3><p>本文在连续的动作空间对 ACER 做了两次修改，分别在策略估计和置信域优化两个方面。</p>
+<h4 id="3-2-1-策略估计修改"><a href="#3-2-1-策略估计修改" class="headerlink" title="3.2.1 策略估计修改"></a>3.2.1 策略估计修改</h4><p>Retrace 技术只学习了 $Q_{\theta_v}$，没有学习 $V_{\theta_v}$。作者觉得二者合一对状态的估计更加准确，方差更小。</p>
+<p>本文设计了一种称为 Stochastic Dueling Networks 的网络结构，简称 SDNs，可以同时估计 $V^\pi$ 和 $Q^\pi$ 。网络的输出 $\tilde{Q}_{\theta_v}$ 是对 $Q^\pi$ 的随机估计值，另一个输出 $V_{\theta_v}$ 是对 $V^\pi$ 的确定估计值。$\tilde{Q}_{\theta_v}$ 的计算可以通过 $V_{\theta_v}$ 表示：</p>
+<script type="math/tex; mode=display">
+\tilde{Q}_{\theta_v}(x_t,a_t) \sim V_{\theta_v}(x_t) + A_{\theta_v}(x_t,a_t) - \frac{1}{n}\sum_{i=1}^n A_{\theta_v}(x_t,u_i) \\
+u_i \sim \pi_\theta(\cdot|x_t)
+\tag{16}
+\label{16}</script><p><img src="/2020/02/12/ACER论文笔记/SDNs.png" alt="SDNs" style="zoom:67%;"></p>
+<p>同时还可以依据 $\tilde{Q}_{\theta_v}$ 和目标 $Q^{target}$ 间的差距来更新 $V_{\theta_v}$ 和  $V^{target}$。也就是说在某种意义上 $\tilde{Q}_{\theta_v}$ 和 $V_{\theta_v}$ 的更新是一致的。这种一致性可以通过以下两个等式来说明：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+&Assume \;\; \mathbb{E}_{u_{1:n}\sim \pi(\cdot|x_t)} \left( \tilde{Q}_{\theta_v}(x_t,a_t) \right) = Q^\pi(x_t,a_t) \\
+&Then \;\;\;\;\;\;\, V_{\theta_v}(x_t) = \mathbb{E}_{a \sim \pi(\cdot|x_t)} \left[ \mathbb{E}_{u_{1:n}\sim \pi(\cdot|x_t)} \left( \tilde{Q}_{\theta_v}(x_t,a) \right) \right] = \mathbb{E}_{a \sim \pi(\cdot|x_t)} \left[ Q^\pi(x_t,a) \right] = V^\pi(x_t)
+\end{aligned}
+\tag{17}
+\label{17}</script><p>本文通过推导，利用带修正项的重要性截断技术的形式，推导出一种新的 $V^{target}$ 表达形式（推导过程见文章附录 D）：</p>
+<script type="math/tex; mode=display">
+V^{target}(x_t) = min \left\{1, \frac{\pi(a_t|x_t)}{\mu(a_t|x_t)} \right\} \left( Q^{ret}(x_t,a_t)-Q_{\theta_v}(x_t,a_t) \right) + V_{\theta_v}(x_t)
+\tag{18}</script><p>最后本文在更新 $Q^{ret}$ 的参数时采用的截断重要性因子 $\overline{\rho}_t$ 也加了一点改变：</p>
+<script type="math/tex; mode=display">
+\overline{\rho}_t = min \left\{ 1, \left( \frac{\pi(a_t|x_t)}{\mu(a_t|x_t)} \right)^{\frac{1}{d}} \right\}
+\tag{19}</script><p>其中 $d$ 是动作空间的维度。这个改变只是工程性的，并没有理论的意义。</p>
+<h4 id="3-2-2-置信域优化修改"><a href="#3-2-2-置信域优化修改" class="headerlink" title="3.2.2 置信域优化修改"></a>3.2.2 置信域优化修改</h4><p>连续情况下的策略梯度更新公式与离散情况下的策略梯度更新公式相似，除了将公式 ($\ref{12}$) 中的 $Q^{ret}$ 替换为 $Q^{opc}$ 。$Q^{opc}$ 的计算公式与 $Q^{ret}$ 非常相似，除了截断重要性因子被替换为 1 <a href="#ref5">[5]</a>。连续情况下的策略梯度公式如下所示：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\hat{g}_t^{acer} &= \mathbb{E}_{x_t} \left[ \mathbb{E}_{a_t} \left[ \overline{\rho}_t \nabla_{\phi_\theta(x_t)} \log f(a_t|\phi_\theta(x))(Q^{ret}(x_t,a_t)-V_{\theta_v}(x_t)) \right] \\
++ \mathbb{E}_{a \sim \pi} \left( \left[ \frac{\rho_t(a)-c}{\rho_t(a)} \right]_+ \nabla_{\phi_\theta(x_t)} \log f(a|\phi_\theta(x)) [Q_{\theta_v}(x_t,a)-V_{\theta_v}(x_t)]\right) \right]
+\end{aligned}
+\tag{20}
+\label{20}</script><script type="math/tex; mode=display">
+Q^{opc}(x_t, a_t) = r_t + \gamma [Q^{opc}(x_{t+1},a_{t+1})-Q(x_{t+1},a_{t+1})] + \gamma V(x_{t+1})
+\tag{21}</script><p>公式 ($\ref{20}$) 的期望形式可以用蒙特卡罗方法代替，最终写成：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\hat{g}_t^{acer} &=  \overline{\rho}_t \nabla_{\phi_\theta(x_t)} \log f(a_t|\phi_\theta(x))(Q^{ret}(x_t,a_t)-V_{\theta_v}(x_t)) \\
+&+ \left[ \frac{\rho_t(a_t')-c}{\rho_t(a_t')} \right]_+ \nabla_{\phi_\theta(x_t)} \log f(a_t'|\phi_\theta(x)) [Q_{\theta_v}(x_t,a_t')-V_{\theta_v}(x_t)]
+\end{aligned}
+\tag{22}
+\label{22}</script><p>$Q^{opc}$ 出自另一篇研究异策略纠正的论文 <a href="#ref5">[5]</a>，可以发现它的形式与 Retrace 技术中的 $Q^{ret}$ 非常像，除了没有截断重要性因子。论文 <a href="#ref5">[5]</a> 中分析，由于没有截断重要性因子，训练过程 $Q^{opc}$ 比 $Q^{ret}$ 不稳定，并且不适用于策略评价（policy evaluation）过程。但是恰恰由于没有截断重要性因子，$Q^{opc}$ 会更好地保留回报（return）的信息，从而在策略梯度中更好地估计 $Q^\pi$，加快训练过程。用一句话概括就是，$Q^{opc}$ 不适用于策略评价（policy evaluation）过程，但适用于策略提升（policy improvement）过程。</p>
+<h4 id="3-2-3-伪代码"><a href="#3-2-3-伪代码" class="headerlink" title="3.2.3 伪代码"></a>3.2.3 伪代码</h4><p><img src="/2020/02/12/ACER论文笔记/continuous_acer.png" alt="continuous_acer" style="zoom: 67%;"></p>
+<p>伪代码中有几个细节需要注意：</p>
+<ul>
+<li>首先这是一个 off-policy 的方法，不像离散版本中既结合了 on-plicy，也结合了 off-policy。</li>
+<li>其次，$a_i$ 和 $a_i’$ 代表的意义不同，准确来说，代表的采样时刻不同。$a_i$ 是存储在回放池中的，也就是在仿真时刻所执行的动作。而 $a_i’$ 是在策略更新的时刻，根据当前的目标策略 $f(\cdot|\phi_{\theta’}(x_t))$ 所采样的。</li>
+<li>最后就是注意 $\rho_i$，$\rho_i’$ 和 $c_i$ 三种重要性因子的使用。 $\rho_i’$ 是用于策略梯度的偏差修正。</li>
+</ul>
+<h2 id="4-工程设置"><a href="#4-工程设置" class="headerlink" title="4. 工程设置"></a>4. 工程设置</h2><h3 id="4-1-ATARI-环境"><a href="#4-1-ATARI-环境" class="headerlink" title="4.1 ATARI 环境"></a>4.1 ATARI 环境</h3><p>网络结构：第一层为 32 个 $8 \times 8$ 步长为 4 的滤波器，第二层为 64 个 $4 \times 4$ 步长为 2 的滤波器，第三层为 64 个 $3 \times 3$ 步长为 1 的滤波器，最后一层为 512 个单元的全连接层。每个隐藏层都采用非线性激活函数。网络输出为 softmax 策略和 Q 值。</p>
+<p>超参数：熵正则化项权重为 0.001，奖励折扣因子为 $\gamma=0.99$，每隔 20 个步长更新一次，即 $k=20$。截断重要性权重超参数 $c=10$，置信域优化约束上限 $\delta=1$，软更新系数 $\alpha=0.99$。</p>
+<h3 id="4-2-Mujoco-环境"><a href="#4-2-Mujoco-环境" class="headerlink" title="4.2 Mujoco 环境"></a>4.2 Mujoco 环境</h3><p>网络结构：和 ATARI 环境相同的网络结构，网络输出为策略和状态值。另外还维护一个小型的网络，输出为随机的优势值 $A$，更新也是利用目标 $Q^{target}$ 和 $V^{target}$ 的更新公式。</p>
+<p>超参数：SDNs 中的超参数（公式 ($\ref{16} $) ）中的 $n$ 取值为 5。奖励折扣因子为 $\gamma=0.995$，每隔 50 个步长更新一次，即 $k=50$。截断重要性权重超参数 $c=5$，软更新系数 $\alpha=0.99$。策略分布采用高斯分布，固定标准差为 0.3。学习率从范围 $[10^{-4},10^{-3.3}]$ 中 log-uniformly 采样。置信域优化约束上限 $\delta$ 从范围 $[0.1,2]$ 中均匀采样。总共采样出 30 组超参数设置。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><span id="ref1">[1]</span> Wang, Z., Mnih, V., Bapst, V., Munos, R., Heess, N., Kavukcuoglu, K., &amp; De Freitas, N. (2019). Sample efficient actor-critic with experience replay. <em>5th International Conference on Learning Representations, ICLR 2017 - Conference Track Proceedings</em>, (2016).</p>
+<p><span id="ref2">[2]</span> Schulman, J., Moritz, P., Levine, S., Jordan, M., &amp; Abbeel, P. (2015). <em>High-Dimensional Continuous Control Using Generalized Advantage Estimation</em>. 1–14. Retrieved from <a href="http://arxiv.org/abs/1506.02438" target="_blank" rel="noopener">http://arxiv.org/abs/1506.02438</a></p>
+<p><span id="ref3">[3]</span> Degris, T., White, M., &amp; Sutton, R. S. (2012). Off-policy actor-critic. <em>Proceedings of the 29th International Conference on Machine Learning, ICML 2012</em>, <em>1</em>, 457–464.</p>
+<p><span id="ref4">[4]</span> Munos, R., Stepleton, T., Harutyunyan, A., &amp; Bellemare, M. G. (2016). Safe and efficient off-policy reinforcement learning. <em>Advances in Neural Information Processing Systems</em>, (Nips), 1054–1062.</p>
+<p>[5] Anna Harutyunyan, Marc G Bellemare, Tom Stepleton, and Remi Munos. Q (λ) with off-policy corrections. arXiv preprint arXiv:1602.04951, 2016.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/AC/" rel="tag"># AC</a>
+            
+              <a href="/tags/ACER/" rel="tag"># ACER</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/02/11/A3C论文笔记/" rel="next" title="A3C论文笔记">
+                  <i class="fa fa-chevron-left"></i> A3C论文笔记
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/02/23/ACKTR论文笔记/" rel="prev" title="ACKTR论文笔记">
+                  ACKTR论文笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-ACER-概念"><span class="nav-text">1. ACER 概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-具体算法"><span class="nav-text">3. 具体算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-离散-ACER"><span class="nav-text">3.1 离散 ACER</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-1-Marginal-value-function"><span class="nav-text">3.1.1 Marginal value function</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-2-Retrace"><span class="nav-text">3.1.2 Retrace</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-3-bias-correction"><span class="nav-text">3.1.3 bias correction</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-4-置信域策略优化"><span class="nav-text">3.1.4 置信域策略优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-5-伪代码"><span class="nav-text">3.1.5 伪代码</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-连续-ACER"><span class="nav-text">3.2 连续 ACER</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-策略估计修改"><span class="nav-text">3.2.1 策略估计修改</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-置信域优化修改"><span class="nav-text">3.2.2 置信域优化修改</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-伪代码"><span class="nav-text">3.2.3 伪代码</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-工程设置"><span class="nav-text">4. 工程设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-ATARI-环境"><span class="nav-text">4.1 ATARI 环境</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-Mujoco-环境"><span class="nav-text">4.2 Mujoco 环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

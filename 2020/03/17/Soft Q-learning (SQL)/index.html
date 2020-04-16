@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Haarnoja, T., Tang, H., Abbeel, P., &amp;amp; Levine, S. (2017). Reinforcement learning with deep energy-based policies. 34th International Conference on Machine Learning, ICML 2017, 3, 2171–2186. 1. 论文概述">
+<meta name="keywords" content="强化学习,Q-learning,energy-based">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Soft Q-learning (SQL)">
+<meta property="og:url" content="http://yoursite.com/2020/03/17/Soft Q-learning (SQL)/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="Haarnoja, T., Tang, H., Abbeel, P., &amp;amp; Levine, S. (2017). Reinforcement learning with deep energy-based policies. 34th International Conference on Machine Learning, ICML 2017, 3, 2171–2186. 1. 论文概述">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/03/17/Soft%20Q-learning%20(SQL)/hexo/source/_posts/Soft%20Q-learning%20(SQL">
+<meta property="og:image" content="http://yoursite.com/2020/03/17/Soft%20Q-learning%20(SQL)/hexo/source/_posts/Soft%20Q-learning%20(SQL">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Soft Q-learning (SQL)">
+<meta name="twitter:description" content="Haarnoja, T., Tang, H., Abbeel, P., &amp;amp; Levine, S. (2017). Reinforcement learning with deep energy-based policies. 34th International Conference on Machine Learning, ICML 2017, 3, 2171–2186. 1. 论文概述">
+<meta name="twitter:image" content="http://yoursite.com/2020/03/17/Soft%20Q-learning%20(SQL)/hexo/source/_posts/Soft%20Q-learning%20(SQL">
+  <link rel="canonical" href="http://yoursite.com/2020/03/17/Soft Q-learning (SQL)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Soft Q-learning (SQL) | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/17/Soft Q-learning (SQL)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Soft Q-learning (SQL)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-03-17 22:03:06" itemprop="dateCreated datePublished" datetime="2020-03-17T22:03:06+08:00">2020-03-17</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/17/Soft Q-learning (SQL)/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/17/Soft Q-learning (SQL)/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Haarnoja, T., Tang, H., Abbeel, P., &amp; Levine, S. (2017). Reinforcement learning with deep energy-based policies. 34th International Conference on Machine Learning, ICML 2017, 3, 2171–2186.</p>
+<h2 id="1-论文概述"><a href="#1-论文概述" class="headerlink" title="1. 论文概述"></a>1. 论文概述</h2><p>本文将最大化熵方法运用在连续状态和动作空间的强化学习方法中，设计了名为 soft Q-learning 的算法。这种算法的优点是提高探索效率，并且便于让智能体在不同任务中共享学习到的技能。</p>
+<p>强化学习可以使用确定性策略和随机策略。随机策略可以提高探索率，但是这种探索率通常是通过引入噪声或者初始化一个熵很高的随机策略。随机策略在某些场景下有些潜在优点，比如随机策略可以实现很高的探索率和组合性（组合性是指与其他算法结合的难易程度）。另外在面对不确定的动态属性，随机策略能表现出很好的鲁棒性，并且提高计算效率和收敛。</p>
+<p>当我们将最优控制和概率推理联系起来的时候，随机策略就是一个最优解决方案。直观上，将控制问题视为推理的过程，目的不是为了产生一个确定性的 the lowest cost 行为，而是产生一系列的 low-cost 行为，并且最大化对应策略的熵。假设我们能学习到了完成任务的所有途径，那么完成任务的最优途径实际上只是学习到的所有途径中的一个具体化。</p>
+<p>因此这种最大化熵的随机策略可以视为更具体的行为和复杂的任务的一个初始化。例如用这种方法训练一个 robot 向前走的 model，然后这个 model 作为下次训练 robot 跳跃、奔跑的初始化参数。随机策略也可以作为多模态奖励场景下的探索机制，并且在处理干扰时鲁棒性更强。</p>
+<p>但是将最大化熵与随机策略结合并应用在连续的状态和动作空间，以及任意类型的策略分布上是具有挑战性的。本文的贡献是将随机策略和最大化熵结合，提出一个容易训练并且高效的算法：soft Q-learning 算法。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><h3 id="2-1-Energy-based-model"><a href="#2-1-Energy-based-model" class="headerlink" title="2.1 Energy based model"></a>2.1 Energy based model</h3><p>在这里补充一下基于能量的模型的概念。基于能量模型可以表示为：</p>
+<script type="math/tex; mode=display">
+p_\theta(x) = \frac{1}{\int \exp(f_\theta(x))dx} \exp(f_\theta(x)) = \frac{1}{Z(\theta)} \exp(f_\theta(x))\tag{1}\label{1}</script><p>其中 $Z(\theta) = \int \exp(f_\theta(x)) dx$ 是归一化常数，也可以叫做 partition function 。</p>
+<h3 id="2-1-Maximum-Entropy-Reinforcement-Learning"><a href="#2-1-Maximum-Entropy-Reinforcement-Learning" class="headerlink" title="2.1 Maximum Entropy Reinforcement Learning"></a>2.1 Maximum Entropy Reinforcement Learning</h3><p>标准的强化学习算法优化目标为：</p>
+<script type="math/tex; mode=display">
+\pi^*_{std} = \arg \max_\pi \sum_t \mathbb{E}_{(s_t,a_t) \sim \rho_\pi} [r(s_t,a_t)]\tag{2}</script><p>最大熵强化学习算法优化目标为：</p>
+<script type="math/tex; mode=display">
+\pi^*_{MaxEnt} = \arg \max_\pi \sum_t \mathbb{E}_{(s_t,a_t) \sim \rho_\pi}[r(s_t,a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t))]\tag{3}\label{3}</script><p>其中 $\alpha$ 是衡量 reward 和 entropy 之间重要性的超参数。与 Boltzmann exploration <a href="#ref1">[1]</a> 和 PGQ <a href="#ref2">[2]</a> 算法不同的是，公式 $\eqref{3}$ 不是最大化当前时间步骤的熵，而是使得策略 $\pi$ 整个轨迹的熵最大化。</p>
+<h3 id="2-2-Soft-Value-Functions-and-Energy-Based-Models"><a href="#2-2-Soft-Value-Functions-and-Energy-Based-Models" class="headerlink" title="2.2 Soft Value Functions and Energy-Based Models"></a>2.2 Soft Value Functions and Energy-Based Models</h3><p>传统的强化学习方法策略通常是一个单峰的分布 (unimodal policy distribution)，比如高斯策略，如下图左图所示。而我们想要探索整个动作分布，可以对动作值函数取幂，就形成了多峰策略分布 (multimodal policy distribution)，如下图右图所示。</p>
+<p><img src="/2020/03/17/Soft Q-learning (SQL)/hexo\source\_posts\Soft Q-learning (SQL" alt="multimodal policy distribution">\multimodal policy distribution.PNG)</p>
+<p>本文使用了一种一般 energy-based 的策略定义形式：</p>
+<script type="math/tex; mode=display">
+\pi(a_t|s_t) \propto \exp(-\mathcal{E}(s_t,a_t))\tag{4}</script><p>其中 $\mathcal{E}$ 是 energy function，可以用神经网络表示。本文将能量模型 $\mathcal{E}(s_t,a_t)$ 和 soft 状态函数、动作值函数结合起来。如下面定理 1。</p>
+<hr>
+<p><strong>定理 1</strong>：定义 soft 动作值函数为：</p>
+<script type="math/tex; mode=display">
+Q^*_{soft}(s_t,a_t) = r_t + \mathbb{E}_{(s_{t+1},\dots) \sim \rho_\pi} \left[ \sum_{l=1}^\infty \gamma^l(r_{t+l} + \alpha \mathcal{H}(\pi^*_{MaxEnt}(\cdot|s_{t+l}))) \right]
+\tag{5}</script><p>定义 soft 状态值函数为：</p>
+<script type="math/tex; mode=display">
+V^*_{soft}(s_t) = \alpha \log \int_\mathcal{A} \exp \left( \frac{1}{\alpha} Q^*_{soft}(s_t,a') \right) \; da'\tag{6}\label{6}</script><p>那么得到公式 $\eqref{3}$ 的最优策略为：</p>
+<script type="math/tex; mode=display">
+\pi^*_{MaxEnt}(a_t|s_t) = \exp \left( \frac{1}{\alpha}\left(Q^*_{soft}(s_t,a_t) - V^*_{soft}(s_t) \right) \right)\tag{7}\label{7}</script><hr>
+<p>公式 $\eqref{6}$ 中的 soft 状态值函数是 <a href="https://link.zhihu.com/?target=https%3A//en.wikipedia.org/wiki/LogSumExp" target="_blank" rel="noopener">LogSumExp</a> 形式，是一种 smooth maximum。公式 $\eqref{7}$ 中的 $\frac{1}{\alpha} Q_{soft}(s_t,a_t)$ 称为 negative energy，$\frac{1}{\alpha}V_{soft}(s_t)$ 称为 log-partition function。本文的附录 A.1 证明了公式 $\eqref{7}$ 表示的新策略可以提高熵和动作值函数的和，也就是可以实现 Policy improvement 。</p>
+<p>本文还推导了 soft 贝尔曼方程的表达式：</p>
+<hr>
+<p><strong>定理 2：</strong> soft 贝尔曼方程的表达式为：</p>
+<script type="math/tex; mode=display">
+Q^*_{soft}(s_t,a_t) = r_t + \gamma \mathbb{E}_{s_{t+1}\sim p_s} [V^*_{soft}(s_{t+1})]\tag{8}\label{8}</script><hr>
+<p>本文的附录 A.2 证明了公式 $\eqref{8}$ 成立。</p>
+<h2 id="3-具体算法"><a href="#3-具体算法" class="headerlink" title="3. 具体算法"></a>3. 具体算法</h2><h3 id="3-1-Soft-Q-Iteration"><a href="#3-1-Soft-Q-Iteration" class="headerlink" title="3.1 Soft Q-Iteration"></a>3.1 Soft Q-Iteration</h3><p>通过压缩映射可以证明：</p>
+<script type="math/tex; mode=display">
+Q_{soft}(s_t,a_t) \leftarrow r_t + \gamma \mathbb{E}_{s_{t+1}\sim p_s}[V_{soft}(s_{t+1})], \forall s_t,a_t 
+\tag{9}
+\label{9}</script><script type="math/tex; mode=display">
+V_{soft}(s_t) \leftarrow \alpha \log \int_\mathcal{A} \exp \left( \frac{1}{\alpha}Q_{soft}(s_t,a') \right) da', \forall s_t 
+\tag{10}
+\label{10}</script><p>会收敛到 $Q^<em>_{soft}$ 和 $V^</em>_{soft}$ 。本文的附录 A.2 有证明。</p>
+<p>但是还有几个点需要取考虑。比如如何将 soft 贝尔曼方程运用在连续和大规模的状态、动作空间，如何对基于能量模型的策略进行采样。</p>
+<h3 id="3-2-Soft-Q-learning"><a href="#3-2-Soft-Q-learning" class="headerlink" title="3.2 Soft Q-learning"></a>3.2 Soft Q-learning</h3><p>由于公式 $\eqref{10}$ 中含有积分项，处理起来比较困难，作者使用随机优化方法对上述公式进行优化。首先对 soft Q 函数进行函数逼近，表示为 $Q^\theta_{soft}(s_t,a_t)$。</p>
+<p>通过重要性采样得到公式 $\eqref{10}$  的期望形式：</p>
+<script type="math/tex; mode=display">
+V^\theta_{soft}(s_t) = \alpha \log \mathbb{E}_{q_{a'}} \left[ \frac{\exp(\frac{1}{\alpha} Q^\theta_{soft}(s_t,a'))}{q_{a'}(a')} \right]
+\tag{11}
+\label{11}</script><p>其中 $q_{a’}$ 可以是动作空间的任意分布。</p>
+<p>通过对 soft Q 构造最小平方误差目标函数：</p>
+<script type="math/tex; mode=display">
+J_Q(\theta) = \mathbb{E}_{s_t \sim q_{s_t}, a_t \sim q_{a_t}} \left[ \frac{1}{2} \left( \hat{Q}_{soft}^\bar{\theta}(s_t,a_t) - Q^\theta_{soft}(s_t,a_t) \right)^2 \right]
+\tag{12}
+\label{12}</script><p>其中 $\hat{Q}_{soft}^\bar{\theta}(s_t,a_t) = r_t + \gamma \mathbb{E}_{s_{t+1} \sim p_{s}}[V_{soft}^\bar{\theta}(s_{t+1})]$ 是目标 Q 值，可以通过公式 $\eqref{11}$ 得到的 $V_{soft}^\bar{\theta}(s_{t+1})$ 进行计算，$\bar{\theta}$ 表示目标网络的参数。</p>
+<p>到了这里，我们可以利用采样的状态和动作进行随机梯度下降来解决公式 $\eqref{12} $ 的最小化问题。 对于 $q_{s_t}$ 和 $q_{a_t}$，可以使用策略 $\pi(a_t|s_t) \propto \exp(\frac{1}{\alpha} Q_{soft}^\theta(s_t,a_t))$ 的样本，也可以使用均匀分布进行采样。但是对于连续的状态、动作空间，使用均匀采样会产生高维度的数据，因此最好的选择是使用当前策略。</p>
+<p>问题是如何从当前策略 $\pi(a_t|s_t) \propto \exp(\frac{1}{\alpha} Q_{soft}^\theta(s_t,a_t))$ 进行采样呢？公式 $\eqref{7}$ 只是一个一般形式，从公式 $\eqref{7}$ 采样是不可能的，因此需要一个 approximate sampling 的过程。</p>
+<h3 id="3-3-Approximate-Sampling-and-SVGD"><a href="#3-3-Approximate-Sampling-and-SVGD" class="headerlink" title="3.3 Approximate Sampling and SVGD"></a>3.3 Approximate Sampling and SVGD</h3><p>当前从基于能量模型的策略中采样主要有两种方法：一种是基于马尔科夫链的蒙特卡罗（MCMC）采样，另一种是构造采样网络，训练成输出与目标分布相似的样本。基于 MCMC 的方法不适用于一边执行策略，一边采样，因此本文利用基于 Stein variational gradient (SVGD) 的采样网络 <a href="#ref3">[3]</a> 和 amortized SVGD <a href="#ref4">[4]</a> 。</p>
+<p>使用 amortized SVGD 有三个好处：</p>
+<ul>
+<li>提供了一个随机的采样网络。</li>
+<li>可以收敛到精确的模型后验分布。</li>
+<li>与 AC 算法相似，可以同 AC 算法联系起来，这就有了之后的 SAC 算法。</li>
+</ul>
+<p>学习的随机采样网络可以表示为 $a_t = f^\phi (\xi;s_t)$，其中 $\phi$ 表示网络的参数，$\xi$ 表示噪声，可以是高斯分布或者其它随机分布。为了将采样网络训练成与 $Q^\theta_{soft}$ 对应的策略模型，我们定义该策略模型为 $\pi^\phi(a_t|s_t)$，并且目标是近似基于能量模型的策略，即公式 $\eqref{7}$ 。利用 KL 散度来衡量两个分布的近似程度，因此目标函数的表达式如下：</p>
+<script type="math/tex; mode=display">
+J_\pi(\phi;s_t) = D_{KL} \left( \pi^\phi(\cdot|s_t) \| \exp(\frac{1}{\alpha}(Q^\theta_{soft}(s_t,\cdot) - V^\theta_{soft})) \right)
+\tag{13}
+\label{13}</script><p>SVGD 提供了一个最贪婪的梯度方向：</p>
+<script type="math/tex; mode=display">
+\Delta f^\phi(\cdot;s_t) = \mathbb{E}_{a_t \sim \pi^\phi} \left[ \mathcal{\kappa(a_t,f^\phi(\cdot;s_t))}\nabla_{a'} Q^\theta_{soft}(s_t,a')\big|_{a'=a_t} + \alpha \nabla_{a'}\kappa(a',f^\phi(\cdot;s_t))\big|_{a'=a_t} \right]
+\tag{14}
+\label{14}</script><p>其中 $\kappa$ 表示核函数，通常使用高斯核函数。</p>
+<p>实际上 $\Delta f^\phi$ 只是 $\kappa$ 的再生核希尔伯特空间中的最优梯度方向，严格来说并不是公式 $\eqref{13} $ 的梯度。但是论文 <a href="#ref4">[4]</a> 中证明了 $\frac{\partial J_\pi}{\partial a_t} \propto \Delta f^\phi$ 。因此可以利用链式法则将 SVGD 应用到策略网络的梯度求解中：</p>
+<script type="math/tex; mode=display">
+\frac{\part J_\pi(\phi;s_t)}{\part \phi} \propto \mathbb{E}_{\xi} \left[ \Delta f^\phi(\xi;s_t) \frac{\part f^\phi(\xi;s_t)}{\part \phi} \right]
+\tag{15}
+\label{15}</script><p>结合以上推导，可以得到 SQL 算法的伪代码如下：</p>
+<p><img src="/2020/03/17/Soft Q-learning (SQL)/hexo\source\_posts\Soft Q-learning (SQL" alt="SQL">\SQL.PNG)</p>
+<p>但是还有两个地方需要注意，一个是采样策略 $q_{a’}$ 怎么确定，二是公式 $\eqref{15}$ 具体应该怎么算。</p>
+<h3 id="3-4-确定-q-a’"><a href="#3-4-确定-q-a’" class="headerlink" title="3.4 确定 $q_{a’}$"></a>3.4 确定 $q_{a’}$</h3><p>在前面的 3.2 节已经说明 $q_{a’}$ 最好是使用策略 $\pi(a_t|s_t) \propto \exp(\frac{1}{\alpha} Q_{soft}^\theta(s_t,a_t))$ 的样本，因此可以直接从采样网络 $a’=f^\phi(\xi’;s)$ 进行采样。不过采样网络在初期训练时，并不能产生能很好估计 $V^\theta_{soft}$ 的样本，因此可以选择在初期训练时选择均匀采样策略，在后期训练时采用当前采样网路。</p>
+<h3 id="3-5-计算-frac-part-J-pi-phi-s-t-part-phi"><a href="#3-5-计算-frac-part-J-pi-phi-s-t-part-phi" class="headerlink" title="3.5 计算 $\frac{\part J_\pi(\phi;s_t)}{\part \phi}$"></a>3.5 计算 $\frac{\part J_\pi(\phi;s_t)}{\part \phi}$</h3><p>注意以下解释使用的符号 $i$ 和 $j$ 与伪代码中不对应。</p>
+<p>结合公式 $\eqref{14}$ 和公式 $\eqref{15}$，可以知道 SVGD 需要计算两次期望。为了计算公式 $\eqref{14}$ 的期望，需要进行一次采样求平均：$a_t^{(i)} = f^\phi(\xi^{(i)})$ 。同样为了计算公式 $\eqref{15}$ 中的期望，也要进行一次采样求平均：$\tilde{a}_t^{(j)} = f^\phi(\tilde{\xi}^{(j)})$ 。这两次采样的结果可能相同也可能不同，但是是分别对应两次期望的采样。</p>
+<p>将公式 $\eqref{14}$ 代入公式 $\eqref{15}$，可以得到：</p>
+<script type="math/tex; mode=display">
+\hat \nabla_\phi J_\pi(\phi;s_t) = \frac{1}{KM} \sum_{j=1}^{K} \sum_{i=1}^{M} \left( \kappa(a_t^{(i)},\tilde{a}_t^{(j)}) \nabla_{a'} Q_{soft}^\theta(s_t,a') \big|_{a'=a_t^{(i)}} + \nabla_{a'} \kappa(a',\tilde{a}_t^{(j)}) \big|_{a'=a_t^{(i)}}  \right) \nabla_\phi f^\phi(\tilde{\xi}^{(j)};s_t)
+\tag{16}</script><p>伪代码中的 $\hat \nabla_\phi J_\pi$ 是 $\hat \nabla_\phi J_\pi(\phi;s_t)$ 对于 mini-batch 的平均。</p>
+<p>另外 $\nabla_{a’} Q^\theta_{soft}(s_t,a’)$ 的求解实际上不是对公式 $\eqref{9} $ 中的 $Q_{soft}(s_t,a’)$ 进行理论求导， 这极其复杂并且无法计算。实际上 $Q^\theta_{soft}(s_t,a’)$ 是 $Q_{soft}(s_t,a’)$ 的神经网络逼近形式，很明显 $\nabla_{a’} Q^\theta_{soft}(s_t,a’)$ 的求解可以在神经网络中运用链式法则，对输入 $a’$ 进行求导。</p>
+<h2 id="4-工程设置"><a href="#4-工程设置" class="headerlink" title="4.工程设置"></a>4.工程设置</h2><p>学习率：Q 网络的学习率为 0.001，策略采样网络的学习率为 0.0001 。使用 ADAM 优化器。</p>
+<p>经验回放池大小：一百万。样本超过一万才进行训练。</p>
+<p>Mini-batch 大小：64 。</p>
+<p>每次迭代的时间步长：10000 。</p>
+<p>网络结构： Q 网络和策略采样网络都采用两层隐藏层，每层 200 格隐藏单元，激活函数采用 ReLU 。</p>
+<p>添加噪声：OU 噪声。</p>
+<p>核函数 $\kappa$ ：$\kappa(a,a’) = \exp(-\frac{1}{h} | a - a’ |^2_2)$, $h = \frac{d}{2 \log (M+1)}$ ，其中 $d$ 表示采样动作 $a_t^{(i)}$ 的成对距离的中值。</p>
+<p>熵权重系数 $\alpha$ 不同环境设置不同，但是都会在短时间内降火，设置是在 200 个 epochs 中 log 线性速度降火到 0.001 。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><span id="#ref1">[1]</span> Sallans, B. and Hinton, G. E. Reinforcement learning with factored states and actions. Journal ofMachine Learning Research, 5(Aug):1063–1088, 2004.</p>
+<p><span id="#ref2">[2]</span> O’Donoghue, B., Munos, R., Kavukcuoglu, K., and Mnih, V. PGQ: Combining policy gradient and Q-learning. arXiv preprint arXiv:1611.01626, 2016.</p>
+<p><span id="#ref3">[3]</span> Liu, Q. and Wang, D. Stein variational gradient descent: A general purpose bayesian inference algorithm. In Advances In Neural Information Processing Systems, pp. 2370–2378, 2016.</p>
+<p><span id="#ref4">[4]</span> Wang, D. and Liu, Q. Learning to draw samples: With application to amortized mle for generative adversarial learning. arXiv preprint arXiv:1611.01722, 2016.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/Q-learning/" rel="tag"># Q-learning</a>
+            
+              <a href="/tags/energy-based/" rel="tag"># energy-based</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/" rel="next" title="Twin Delayed Deep Deterministic policy gradient">
+                  <i class="fa fa-chevron-left"></i> Twin Delayed Deep Deterministic policy gradient
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/03/27/Path Consistency Learning (PCL)/" rel="prev" title="Path Consistency Learning (PCL)">
+                  Path Consistency Learning (PCL) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-论文概述"><span class="nav-text">1. 论文概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Energy-based-model"><span class="nav-text">2.1 Energy based model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Maximum-Entropy-Reinforcement-Learning"><span class="nav-text">2.1 Maximum Entropy Reinforcement Learning</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Soft-Value-Functions-and-Energy-Based-Models"><span class="nav-text">2.2 Soft Value Functions and Energy-Based Models</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-具体算法"><span class="nav-text">3. 具体算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Soft-Q-Iteration"><span class="nav-text">3.1 Soft Q-Iteration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Soft-Q-learning"><span class="nav-text">3.2 Soft Q-learning</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-Approximate-Sampling-and-SVGD"><span class="nav-text">3.3 Approximate Sampling and SVGD</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-确定-q-a’"><span class="nav-text">3.4 确定 $q_{a’}$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-计算-frac-part-J-pi-phi-s-t-part-phi"><span class="nav-text">3.5 计算 $\frac{\part J_\pi(\phi;s_t)}{\part \phi}$</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-工程设置"><span class="nav-text">4.工程设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

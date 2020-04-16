@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Haarnoja, T., Zhou, A., Abbeel, P., &amp;amp; Levine, S. (2018). Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. 35th International Conference on Machine">
+<meta name="keywords" content="强化学习,AC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Soft actor-critic">
+<meta property="og:url" content="http://yoursite.com/2020/03/08/Soft-actor-critic/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="Haarnoja, T., Zhou, A., Abbeel, P., &amp;amp; Levine, S. (2018). Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. 35th International Conference on Machine">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/SAC.png">
+<meta property="og:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/stochastic_deterministic.png">
+<meta property="og:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/reward_scale.png">
+<meta property="og:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/tau.png">
+<meta property="og:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/hard_update.png">
+<meta property="og:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/hyperparameters.png">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Soft actor-critic">
+<meta name="twitter:description" content="Haarnoja, T., Zhou, A., Abbeel, P., &amp;amp; Levine, S. (2018). Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. 35th International Conference on Machine">
+<meta name="twitter:image" content="http://yoursite.com/2020/03/08/Soft-actor-critic/SAC.png">
+  <link rel="canonical" href="http://yoursite.com/2020/03/08/Soft-actor-critic/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Soft actor-critic | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/08/Soft-actor-critic/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Soft actor-critic
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-03-08 12:15:58" itemprop="dateCreated datePublished" datetime="2020-03-08T12:15:58+08:00">2020-03-08</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/08/Soft-actor-critic/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/08/Soft-actor-critic/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Haarnoja, T., Zhou, A., Abbeel, P., &amp; Levine, S. (2018). Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. <em>35th International Conference on Machine Learning, ICML 2018</em>, <em>5</em>, 2976–2989.</p>
+<h2 id="1-论文概要"><a href="#1-论文概要" class="headerlink" title="1. 论文概要"></a>1. 论文概要</h2><p>无模型的强化学习算法存在采样复杂度高和收敛性弱的问题。即使很简单的任务，所需要的样本数量都达到上百万。另外对于不同问题，这些强化学习算法的超参数需要精细调整。本文提出一个 soft actor-critic 强化学习方法，是就基于最大化熵的 off-policy 强化学习方法。在这个框架中，actor 旨在于最大化奖励回报和熵。本文提出的算法在稳定性和性能方面都胜过目前的强化学习算法。</p>
+<p>之所以 TRPO、PPO 和 A3C 这些算法的采样复杂度高，是因为他们都需要在每个梯度更新步骤采集新的样本。而 off-policy 方法一般用在 Q-learning 一类强化学习方法上，与传统的策略梯度方法结合会导致算法稳定性和收敛性下降。另外，最大化熵方法通常能提高探索效率和鲁棒性，但还没有与 off-policy 和 policy-gradient 等强化学习模型结合起来。</p>
+<p>本文的主要贡献点就是将 off-policy 和最大化熵方法结合到 ac 框架中，用于连续空间的控制任务，并将算法命名为 SAC （soft actor-critic）。之前的很多 AC 框框架只采用了 on-policy 方法，并只是将熵当作正则项。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>传统的强化学习目标是 $\sum_t \mathbb{E}_{(s_t,a_t)\sim \rho_\pi}[r(s_t,a_t)]$，在此基础上添加了策略的熵作为目标项：</p>
+<script type="math/tex; mode=display">
+J(\pi) = \sum_{t=0}^T \mathbb{E}_{(s_t,a_t) \sim \rho_\pi} [r(s_t,a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t))]
+\tag{1}
+\label{1}</script><p>超参数 $\alpha$ 控制着熵这一项的重要程度，也就是控制着策略的随机程度。对于无限时长的任务，可以加入折扣因子：</p>
+<script type="math/tex; mode=display">
+J(\pi) = \sum_{t=0}^T \mathbb{E}_{(s_t,a_t) \sim \rho_\pi} \left[ \sum_{l=t}^\infty \gamma^{l-t} \mathbb{E}_{s_l \sim p, a_l \sim \pi} [r(s_t,a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t)) | s_t=s_l, a_t=a_l] \right]
+
+
+\tag{2}</script><h2 id="3-算法推导"><a href="#3-算法推导" class="headerlink" title="3. 算法推导"></a>3. 算法推导</h2><h3 id="3-1-Soft-Policy-Iteration"><a href="#3-1-Soft-Policy-Iteration" class="headerlink" title="3.1 Soft Policy Iteration"></a>3.1 Soft Policy Iteration</h3><p>本文先将最大熵方法和策略迭代方法结合得出收敛性结论（针对 tabular-setting）。</p>
+<p>首先定义 soft 策略迭代中的 soft 策略评估过程，假设 $\mathcal{T}^\pi$ 为修改后的贝尔曼操作子，定义 soft 策略评估过程如下：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\mathcal{T}^\pi Q(s_t,a_t) &\triangleq r(s_t,a_t) + \gamma \mathbb{E}_{s_{t+1}\sim p}[V(s_{t+1})] \\
+where \;\; V(s_t) &= \mathbb{E}_{a_t \sim \pi} [Q(s_t,a_t) - \log \pi(a_t|s_t)]
+\end{aligned}
+\tag{3}
+\label{3}</script><p>以上公式的 $V(s_t)$ 称为 soft 状态函数，其中融合了 $\pi$ 的熵。根据公式 $\eqref{3}$ 可以证明以下引理。</p>
+<p><strong>引理 1</strong>：考虑公式 $\eqref{3}$ 中的 $\mathcal{T}^\pi$，并给出一个映射：$Q^0:\mathcal{S}\times \mathcal{A} \rightarrow \mathbb{R}, |\mathcal{A}|&lt; \infty$，定义 $Q^{k+1}=\mathcal{T}^\pi Q^k$。当 $k \rightarrow \infty$ 时，$Q^k$ 将会收敛为 $\pi$ 的 soft Q-value 。</p>
+<p>引理 1 的结果表示公式 $\eqref{3}$ 定义的贝尔曼方程可以收敛。引理 1 在本文的附录 B.1 中有证明。</p>
+<p>接下来定义 soft 策略迭代中的 soft 策略提升过程：</p>
+<script type="math/tex; mode=display">
+\pi_{new} = \mathop{\arg \min}_{\pi' \in \Pi} D_{KL} \left( \pi'(\cdot|s_t) \Bigg\| \frac{exp(Q^{\pi_{old}}(s_t,\cdot))}{Z^{\pi_{old}}(s_t)} \right)
+\tag{4}
+\label{4}</script><p>公式 $\eqref{4}$ 中的 $\pi’ \in \Pi$ 表示将策略限制在一个范围中，者可以对应为某些分布家族的参数化。为了实现限制 $\pi \in \Pi$，本文采用 KL 散度进行投影的方式，也就是公式 $\eqref{4}$ 中出现的 $D_{KL}$ 。另外 $Z^{\pi_{old}}(s_t)$ 是配分函数，用来归一化分布，实际上是不可计算的，但是对新策略的参数求导没有贡献，因此可以忽略。根据公式 $\eqref{4}$ 可以证明以下引理。</p>
+<p><strong>引理 2：</strong>令 $\pi_{old} \in \Pi$，并令 $\pi_{new}$ 为公式 $\eqref{4}$ 的结果，那么 $Q^{\pi_{new}}(s_t,a_t) \ge Q^{\pi_{old}}(s_t,a_t), \forall (s_t,a_t) \in \mathcal{S} \times \mathcal{A}, |\mathcal{A}| &lt;\infty$  </p>
+<p>引理 2 的结果表示公式 $\eqref{4}$ 定义的策略提升过程能满足新策略的性能不下降。证明过程在本文的附录 B.2 。</p>
+<p>根据引理 1 和引理 2 的结论，本文证明了以下定理（证明过程在本文的附录 B.3）。</p>
+<p><strong>定理 1</strong>：重复运用 soft 策略评估和 soft 策略提升，最终可以收敛到最优策略 $\pi^*$，使得 $Q^{\pi^*}(s_t,a_t) \ge Q^\pi(s_t,a_t),\forall \pi \in \Pi \;\; and (s_t,a_t) \in \mathcal{S} \times \mathcal{A},|\mathcal{A}|&lt;\infty$ 。</p>
+<h3 id="3-2-Soft-Actor-Critic"><a href="#3-2-Soft-Actor-Critic" class="headerlink" title="3.2 Soft Actor-Critic"></a>3.2 Soft Actor-Critic</h3><p>以上的 soft policy iteration 方法只是针对离散的状态和动作空间。为了应对大规模的连续状态和动作空间，需要对状态函数和策略进行函数逼近，也就是参数化。</p>
+<p>本文总共对三个函数进行了参数化：soft 状态函数 $V_\psi(s_t)$、soft Q 函数 $Q_\theta(s_t,a_t)$，策略函数 $\pi_\phi(a_t|s_t)$ 。对应的参数分别是 $\psi$、$\theta$ 和 $\phi$ 。</p>
+<p>根据公式 $\eqref{3}$ ，sot 状态函数是可以通过 soft Q 函数和策略函数来计算的，但是引入一个单独的函数估计可以提高训练的稳定性，以及便于与其他网络同时训练。</p>
+<p>soft 状态函数的训练目标是：</p>
+<script type="math/tex; mode=display">
+J_V(\psi) = \mathbb{E}_{s_t \sim \mathcal{D}} \left[ \frac{1}{2} \left( V_\psi(s_t) - \mathbb{E}_{a_t \sim \pi_\phi}[Q_\theta(s_t,a_t) - \log \pi_\phi(a_t|s_t)] \right)^2 \right]
+\tag{5}
+\label{5}</script><p>这里的 $\mathcal{D}$ 表示经验回放池。注意公式 $\eqref{5}$ 中的 $a_t$ 不是从经验回放池中抽取的动作，而是从当前策略采样的动作。</p>
+<p>公式 $\eqref{5}$ 求导可得：</p>
+<script type="math/tex; mode=display">
+\hat{\nabla_\psi} J_V(\psi) = \nabla_\psi V_\psi(s_t)(V_\psi(s_t) - Q_\theta(s_t,a_t) + \log \pi_\phi(a_t|s_t))
+\tag{6}
+\label{6}</script><p>soft Q 函数的训练目标是：</p>
+<script type="math/tex; mode=display">
+J_Q(\theta) = \mathbb{E}_{(s_t,a_t) \sim \mathcal{D}} \left[ \frac{1}{2}\left( Q_\theta(s_t,a_t) - \hat{Q}(s_t,a_t) \right)^2 \right]
+\tag{7}
+\label{7}</script><p>其中：</p>
+<script type="math/tex; mode=display">
+\hat{Q}(s_t,a_t) = r(s_t,a_t) + \gamma \mathbb{E}_{s_{t+1}\sim p}[V_{\bar{\psi}}(s_{t+1})]
+\tag{8}</script><p>公式 $\eqref{7}$ 求导可得：</p>
+<script type="math/tex; mode=display">
+\hat{\nabla_\theta}J_Q(\theta) = \nabla_\theta Q_\theta(s_t,a_t)(Q_\theta(s_t,a_t) - r(s_t,a_t) - \gamma V_{\bar{\psi}}(s_{t+1}))
+\tag{9}</script><p>其中 $V_\bar{\psi}$ 表示的是独立的目标网络，参数 $\bar{\psi}$ 的更新是通过 $\psi$ 进行 soft update，也就是滑动加权平均。</p>
+<p>最后是策略的训练目标：</p>
+<script type="math/tex; mode=display">
+J_\pi(\phi) = \mathbb{E}_{s_t \sim \mathcal{D}} \left[ D_{KL} \left( \pi_\phi(\cdot|s_t) \Bigg\| \frac{exp(Q_\theta(s_t,\cdot))}{Z_\theta(s_t)} \right) \right]
+\tag{10}</script><p>为了对策略进行参数化，本文利用神经网络加噪声的形式表示：$a_t = f_\phi(\epsilon_t;s_t)$，其中 $\epsilon_t$ 表示输入噪声向量，可以从某些固定分布中采样。重新策略的训练目标为：</p>
+<script type="math/tex; mode=display">
+J_\pi(\phi) = \mathbb{E}_{s_t \sim \mathcal{D},\epsilon \sim \mathcal{N}} [\log \pi_\phi(f_\phi(\epsilon_t;s_t)|s_t) - Q_\theta(s_t,f_\phi(\epsilon_t;s_t))]
+\tag{11}
+\label{11}</script><p>联合公式 $\eqref{3}$ 对公式 $\eqref{11}$ 进行求导得：</p>
+<script type="math/tex; mode=display">
+\hat{\nabla_\phi} J_\pi(\phi) = \nabla_\phi \log \pi_\phi(a_t|s_t) + (\nabla_{a_t} \log \pi_\phi(a_t|s_t) - \nabla_{a_t} Q(s_t,a_t)) \nabla_\phi f_\phi(\epsilon_t;s_t)
+\tag{12}</script><p>最终 SAC 的伪代码如下：</p>
+<p><img src="/2020/03/08/Soft-actor-critic/SAC.png" alt="SAC" style="zoom:80%;"></p>
+<h2 id="4-消融实验"><a href="#4-消融实验" class="headerlink" title="4. 消融实验"></a>4. 消融实验</h2><h3 id="4-1-Stochastic-vs-deterministic"><a href="#4-1-Stochastic-vs-deterministic" class="headerlink" title="4.1 Stochastic vs. deterministic"></a>4.1 Stochastic vs. deterministic</h3><p>deterministic SAC 不加入熵作为目标，同时策略函数输出的策略是固定的，没有加入噪声。对比结果如下：</p>
+<p><img src="/2020/03/08/Soft-actor-critic/stochastic_deterministic.png" alt="stochastic_deterministic" style="zoom: 60%;"></p>
+<h3 id="4-2-reward-scaling"><a href="#4-2-reward-scaling" class="headerlink" title="4.2 reward scaling"></a>4.2 reward scaling</h3><p>reward scaling 可以认为是调整公式 $ \eqref{1}$ 中的超参数 $\alpha$，只不过是通过放大奖励项的倍数，$\alpha$ 的值则设为 1。对比结果如下：</p>
+<p><img src="/2020/03/08/Soft-actor-critic/reward_scale.png" alt="reward_scale" style="zoom: 50%;"></p>
+<h3 id="4-3-target-smoothing-coefficient"><a href="#4-3-target-smoothing-coefficient" class="headerlink" title="4.3 target smoothing coefficient"></a>4.3 target smoothing coefficient</h3><p>就是指目标状态网络的软更新超参数 $\tau$ 的取值，对比结果如下：</p>
+<p><img src="/2020/03/08/Soft-actor-critic/tau.png" alt="tau" style="zoom:50%;"></p>
+<h3 id="4-4-hard-update-vs-soft-update"><a href="#4-4-hard-update-vs-soft-update" class="headerlink" title="4.4 hard update vs. soft update"></a>4.4 hard update vs. soft update</h3><p>目标网络的更新还可以采用硬更新方法，就是每隔一段训练周期，就将行为网络的参数赋值给目标网络。对比结果如下：</p>
+<p><img src="/2020/03/08/Soft-actor-critic/hard_update.png" alt="hard_update" style="zoom:50%;"></p>
+<h2 id="5-工程设置"><a href="#5-工程设置" class="headerlink" title="5. 工程设置"></a>5. 工程设置</h2><p><img src="/2020/03/08/Soft-actor-critic/hyperparameters.png" alt="hyperparameters" style="zoom: 67%;"></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/AC/" rel="tag"># AC</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/03/04/Generative-Adversarial-Imitation-Learning/" rel="next" title="Generative Adversarial Imitation Learning">
+                  <i class="fa fa-chevron-left"></i> Generative Adversarial Imitation Learning
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/03/09/Twin-Delayed-Deep-Deterministic-policy-gradient/" rel="prev" title="Twin Delayed Deep Deterministic policy gradient">
+                  Twin Delayed Deep Deterministic policy gradient <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-论文概要"><span class="nav-text">1. 论文概要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法推导"><span class="nav-text">3. 算法推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Soft-Policy-Iteration"><span class="nav-text">3.1 Soft Policy Iteration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Soft-Actor-Critic"><span class="nav-text">3.2 Soft Actor-Critic</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-消融实验"><span class="nav-text">4. 消融实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Stochastic-vs-deterministic"><span class="nav-text">4.1 Stochastic vs. deterministic</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-reward-scaling"><span class="nav-text">4.2 reward scaling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-target-smoothing-coefficient"><span class="nav-text">4.3 target smoothing coefficient</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-hard-update-vs-soft-update"><span class="nav-text">4.4 hard update vs. soft update</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-工程设置"><span class="nav-text">5. 工程设置</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

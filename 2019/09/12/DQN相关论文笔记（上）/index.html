@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这篇笔记主要提及下面四篇关于DQN的著名论文的前两篇：  [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp;amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retr">
+<meta name="keywords" content="强化学习,DQN">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DQN相关论文笔记（上）">
+<meta property="og:url" content="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="这篇笔记主要提及下面四篇关于DQN的著名论文的前两篇：  [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp;amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retr">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/DQN_peseudocode.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/natureDQN_peseudocode.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/DQN_hyperparameters.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/DQN_representation.png">
+<meta property="og:updated_time" content="2019-10-02T06:05:40.003Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DQN相关论文笔记（上）">
+<meta name="twitter:description" content="这篇笔记主要提及下面四篇关于DQN的著名论文的前两篇：  [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp;amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retr">
+<meta name="twitter:image" content="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/DQN_peseudocode.png">
+  <link rel="canonical" href="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>DQN相关论文笔记（上） | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/12/DQN相关论文笔记（上）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">DQN相关论文笔记（上）
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-12 22:47:13" itemprop="dateCreated datePublished" datetime="2019-09-12T22:47:13+08:00">2019-09-12</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-02 14:05:40" itemprop="dateModified" datetime="2019-10-02T14:05:40+08:00">2019-10-02</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/12/DQN相关论文笔记（上）/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/09/12/DQN相关论文笔记（上）/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这篇笔记主要提及下面四篇关于DQN的著名论文的前两篇：</p>
+<p><span id="id1"> [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., &amp; Riedmiller, M. (2013). Playing Atari with Deep Reinforcement Learning. 1–9. Retrieved from <a href="http://arxiv.org/abs/1312.5602" target="_blank" rel="noopener">http://arxiv.org/abs/1312.5602</a></span></p>
+<p><span id="id2"> [2] Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., … Hassabis, D. (2015). Human-level control through deep reinforcement learning. Nature, 518(7540), 529–533. <a href="https://doi.org/10.1038/nature14236" target="_blank" rel="noopener">https://doi.org/10.1038/nature14236</a></span></p>
+<p><span id="id3"> [3] Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). Deep reinforcement learning with double Q-Learning. 30th AAAI Conference on Artificial Intelligence, AAAI 2016, 2094–2100.</span></p>
+<p><span id="id4"> [4] Wang, Z., Schaul, T., Hessel, M., Van Hasselt, H., Lanctot, M., &amp; De Frcitas, N. (2016). Dueling Network Architectures for Deep Reinforcement Learning. 33rd International Conference on Machine Learning, ICML 2016, 4(9), 2939–2947.<br><a id="more"></a></span></p>
+<p>DQN（Deep Q-Learning）算是 DRL 的开山之作，算是采用了 Value function approximation 的 critic-only 类算法，实现了从感知到动作的端对端学习法，由 DeepMind 在 NIPS 2013 上提出[1]，后在 Nature 2015 上提出改进版本[2]。Double-DQN[3] 和 Dualing-DQN[4] 都是 DQN 的改进版本，前者对训练算法进行了改进，后者对模型结构进行了改进。</p>
+<hr>
+<h1 id="一、-DQN：成功将DL和RL结合-1"><a href="#一、-DQN：成功将DL和RL结合-1" class="headerlink" title="一、 DQN：成功将DL和RL结合 [1]"></a>一、 DQN：成功将DL和RL结合 <a href="#id1">[1]</a></h1><h2 id="1-DQN-简述"><a href="#1-DQN-简述" class="headerlink" title="1. DQN 简述"></a>1. DQN 简述</h2><p>2013年这篇论文第一个提出利用深层强化学习模型从高维度传感器信号中学习控制策略。模型由卷积神经网络构成，通过本文提出的方法（Q-learning的变种），实现从原始像素输入到值函数输出。</p>
+<h3 id="1-1-RL-结合深度学习的问题"><a href="#1-1-RL-结合深度学习的问题" class="headerlink" title="1.1 RL 结合深度学习的问题"></a>1.1 RL 结合深度学习的问题</h3><p>在深度学习盛行之前，RL需要依靠<strong>手工设计特征</strong>，并组合成值函数或策略函数。RL性能好坏很大部分取决于特征的质量。深度学习盛行之后，可以直接中原始的计算机视觉和语音信号中自动提取特征。深度学习的方式是利用一堆神经网络（例如卷积神经网络，多层感知机，循环神经网络，有限玻尔兹曼机等）进行深层联合，并采用监督或非监督模型进行学习。自然而然考虑是否能将深度学习和强化学习进行结合，利用深度学习进行特征提取，而不必手工设计特征。</p>
+<p>但是将深度学习与强化学习结合并非易事，起码存在三个关键问题：</p>
+<ul>
+<li><p>采用深度学习的方式通常需要很多带标签的训练数据，但是RL每次与环境交互只能获得一个奖励值，与深度学习的训练集相比，奖励值十分稀疏，并且还会带有噪声以及延迟。</p>
+</li>
+<li><p>深度学习算法假设数据集样本是独立的，但是在强化学习中，状态序列具有很大的关联度，状态之间并不能认为是服从独立分布的。</p>
+</li>
+<li><p>另外RL当学习到新的动作策略时，状态分布和动作分布都会发生改变，然而深度学习是假定数据具有固定的分布。</p>
+</li>
+</ul>
+<h3 id="1-2-本篇论文的工作"><a href="#1-2-本篇论文的工作" class="headerlink" title="1.2 本篇论文的工作"></a>1.2 本篇论文的工作</h3><p>本篇论文采用卷积神经网络来克服深度学习和RL结合的问题，并直接从视觉信号（像素）学习到成功的控制策略。提出Q-learning的改进版本对网络参数进行训练。同时为了解决数据关联度高，训练过程中数据分布不稳定的问题，本文采用了经验回放的机制，，每次随机抽取先前的一小部分transition进行训练，这样可以平滑训练集的分布。</p>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>动作空间是离散的，表示为 $\mathcal{A} = {1, \dots, K}$。 在每个时间步长，agent 会从 $\mathcal{A}$ 中挑选一个动作 $a_t$。</p>
+<p>本文认为环境是部分可观察的，因此只用当前的观测值 $x_t$ 来表示当前环境的状态是不够的。因此将 $t$ 时刻的状态 $s_t$ 定义为动作值和观测值的序列，也就是 $s_t = x_1, a_1, x_2, \cdots, a_{t-1}, x_t$。 （这里描述的环境是动态的，部分感知的，因此状态的描述需要依赖于动作值和观察值的序列，但是如果环境是完全感知的，静态的，一般都是将 $x_t$ 等同于 $s_t$。DDPG的论文就是这么做的）</p>
+<p>定义 $t$ 时刻的折扣奖励 $R_t = \sum_{t’=t}^T \gamma^{t’-t}r_{t’}$，其中 $T$ 是结束的时刻，$\gamma$ 是折扣因子。</p>
+<p>定义最优动作-值函数 $Q^*(s,a) = max_\pi \mathbb{E} [R_t|s = s_t, a = a_t, \pi]$，$\pi$ 是动作分布（动作空间的各个动作被选择的概率）。最优动作-值函数满足贝尔曼方程，也就是可以写成：</p>
+<script type="math/tex; mode=display">Q^*(s,a) = \mathbb{E}_{s' \sim \mathcal{E}} \left[r + \gamma max_{a'} \, Q^*(s', a') |s, a \right]</script><p>上述公式中的 $r$ 和 $s’$ 由 $s$，$a$ 决定。通过上述的贝尔曼方程形式的动作-值函数，可以得到一种求解最优动作-值函数的迭代方法：</p>
+<script type="math/tex; mode=display">Q_{i+1}(s, a) = \mathbb{E} [r + \gamma max_{a'} Q_i(s', a') | s, a]</script><p>其中 $i$ 是迭代次数，当 $i \rightarrow \infty$时，$Q_i \rightarrow Q^*$。</p>
+<p><strong>但是实际上这种方法非常有限，对于状态空间庞大的环境，根本不适用。因为这种迭代形式的方法需要为每一个 $\{s, a\}$ 序列都求解一个动作-值，无法对庞大的状态空间进行泛化。</strong></p>
+<p>为了应对庞大的状态空间，过去的RL方法通常用线性函数（有时候也用非线性函数）来对动作-值函数进行逼近，表示为 $Q(s,a;\theta) \approx Q^*(s,a)$。而本文就是将线性函数逼近的方法改成神经网络逼近，该网络称之为 Q 网络。</p>
+<p>Q 网络的参数更新通过最小化损失函数，其定义为 Q 网络输出的 Q 值和目标 Q 值的均方误差函数：</p>
+<script type="math/tex; mode=display">L_i(\theta_i) = \mathbb{E}_{s,a \sim \rho(\cdot)} \left[(y_i - Q_i(s,a;\theta_i))^2 \right]</script><script type="math/tex; mode=display">y_i = \mathbb{E}_{s' \sim \mathcal{E}} \left[r + \gamma max_{a'} Q(s', a'; \theta_{i-1})|s, a \right]</script><p>其中 $\rho(s, a)$ 称之为行为分布，也就是 $s$ 和 $a$ 序列的概率分布。 $y_t$ 是目标 Q 值，<strong>$\theta_{i-1}$ 在迭代过程中是保持不变的。</strong>需要注意的是，<strong>和监督学习不同，监督学习的目标通常是固定的，并且与网络的参数无关。然而此处目标的计算也依赖于网络的参数。</strong></p>
+<p>对均方误差损失函数计算 $\theta_i$ 的梯度：</p>
+<script type="math/tex; mode=display">\nabla {\theta_i} L_i(\theta_i) = \mathbb{E}_{s,a \sim \rho(\cot), s' \sim \mathcal{E}} \left[ \left(r + \gamma max_{a'} Q(s', a';\theta_{i-1}) - Q(s, a;\theta_i) \right) \nabla_{\theta_i} Q(s, a;\theta_i) \right]</script><p>在实际计算中，并不会计算梯度的完整期望，一般为了简便采用SGD方法来最小化上述损失函数。也就是，在每个时间不长，只选择一个样本来计算损失函数的梯度，代替损失函数梯度的期望值，这种方法就是我们熟悉的 Q-learning 方法。</p>
+<p>Q-learning 方法是 model-free 和 off-policy 类型的方法。 model-free 是指不需要对环境进行建模，而是通过从环境中收集样本进行学习。另外，Q-learning 的目标策略和行动策略不是同一种策略，这种方式也称为 off-policy。目标策略采用的是贪婪策略，即 $a = max_a Q(s,a;\theta)$，行动策略采用的是 $\epsilon$ -贪婪策略，有 $1-\epsilon$ 的概率选择贪婪策略，有 $\epsilon$ 的概率选择随机策略。</p>
+<p>在深度学习兴起之前，人们普遍认为将 model-free 强化学习算法和非线性函数逼近，或者 off-policy 结合的方法都可能导致 Q 网络发散。所以传统的强化学习一般都采用线性函数逼近动作-值函数。近年来，由于深度学习的兴起，越来越多研究采用深度学习方法与强化学习方法结合。有一篇工作和本文提出的 DQN 方法比较像，称之为 <em>neural fitted Q-learning</em>（NFQ）。不过有两点主要区别：</p>
+<ul>
+<li><p>NFQ 采用批梯度下降方法最小化损失函数，DQN 采用随机梯度下降方法，相对来说，随机梯度下降方法的计算代价更小。</p>
+</li>
+<li><p>NFQ 采用深层自动编码器对视觉输入信号进行特征提取，利用非监督方法训练得到低维度的状态表示。然后再将低维度的状态表示应用 NFQ 学习控制策略（相当于将两种网络组合到一起，两种网络是单独训练的）。但是 DQN 直接应用视觉输入信号，不做任何处理，最终会学习到和动作-值显著关联的特征，也就是学习到的特征会根据获取到的动作-值而变化（相当于特征提取网络嵌入到 Q 网络，它们是一起训练的）。虽然文中是说不做任何处理，但是实际上还是对视觉信号做了灰度化以及下采样的预处理的，只不过输入依然是像素点而已。</p>
+</li>
+</ul>
+<h2 id="3-算法模型"><a href="#3-算法模型" class="headerlink" title="3. 算法模型"></a>3. 算法模型</h2><h3 id="3-1-DQN-的关键点"><a href="#3-1-DQN-的关键点" class="headerlink" title="3.1 DQN 的关键点"></a>3.1 DQN 的关键点</h3><p>DQN 模型的目标是将强化学习和深层神经网络结合起来，只需要输入原始 RGB 图像并通过 SGD 对样本进行训练便可以输出最优 Q 网络。</p>
+<p>DQN 模型中最重要的一个技巧是采用了经验回放机制。在每个时间步长，都会将经验 $e_t = (s_t, a_t, r_t, s_{t+1})$ 存储在数据集 $\mathcal{D} = \{e_1, e_2, \dots, e_N\}$ 中（其实终止标志 $done$ 也要存进去，表示当前状态是否还有后继状态），并且会保留许多 episode 的经验，即新的 episode 开启时，经验回放池 $\mathcal{D}$ 不会重置。</p>
+<p>DQN 模型中采用 off-policy，与Q-learning是一样的，目标策略采用贪婪策略，行动策略采用 $\epsilon$ -贪婪策略。</p>
+<p>因为从经验回放池中抽取的历史经验具有不一样的长度（因为状态实际上是一个动作-观测值序列），因此定义函数 $\phi$ 来将长度不一致的历史经验输出为固定长度的历史经验表示。函数 $\phi$ 的具体定义参考3.3节。</p>
+<p>算法伪代码如下所示：<br><img src="/2019/09/12/DQN相关论文笔记（上）/DQN_peseudocode.png" alt="DQN 伪代码"></p>
+<p>等式（3）就是上面的均方误差损失函数：</p>
+<script type="math/tex; mode=display">\nabla_{\theta_i} L_i(\theta_i) = \mathbb{E}_{s,a \sim \rho(\cdot), s' \sim \mathcal{E}} \left[ \left(r + \gamma max_{a'} Q(s', a';\theta_{i-1}) - Q(s, a;\theta_i) \right) \nabla_{\theta_i} Q(s, a;\theta_i) \right]</script><p>因为样本是从经验回放池 $\mathcal{D}$ 中均匀采样，因此写成下面这种形式会更清晰一些：<br><span id="eq3.1"><script type="math/tex">\nabla_{\theta_i} L_i(\theta_i) = \mathbb{E}_{(s,a,r,s') \sim U(\mathcal{D})} \left[ \left(r + \gamma max_{a'} Q(s', a';\theta_{i-1}) - Q(s, a;\theta_i) \right) \nabla_{\theta_i} Q(s, a;\theta_i) \right]</script><br>$U(\mathcal{D})$ 表示经验回放池 $\mathcal{D}$ 中样本的均匀分布。</span></p>
+<h3 id="3-2-DQN-的优点"><a href="#3-2-DQN-的优点" class="headerlink" title="3.2 DQN 的优点"></a>3.2 DQN 的优点</h3><p>DQN 与传统的在线 Q-learning相比，有以下一些优点：</p>
+<ul>
+<li><p>每个时间步长的经验都有可能用于未来很多次参数更新过程，因此提高了数据的利用效率。</p>
+</li>
+<li><p>比起 Q-learning 直接用连续的样本学习，DQN 采用经验回放池的机制打破了数据间的关联性，降低了每次更新的方差。</p>
+</li>
+<li><p>通过使用经验重放，对行为分布的许多先前状态进行平均，平滑了训练样本数据分布，避免了参数的振荡或发散。另外 DQN 必须采用 off-policy，因为当前参数和生成样本时的参数已经不同，而使用旧参数生成的动作来采样更新当前参数，很容易陷入局部最优点或者震荡。</p>
+</li>
+</ul>
+<h2 id="4-工程上的设置"><a href="#4-工程上的设置" class="headerlink" title="4. 工程上的设置"></a>4. 工程上的设置</h2><h3 id="4-1-预处理函数-phi-的定义"><a href="#4-1-预处理函数-phi-的定义" class="headerlink" title="4.1 预处理函数 $\phi$ 的定义"></a>4.1 预处理函数 $\phi$ 的定义</h3><ul>
+<li><p>将原本 210 * 160 像素，128 种颜色的图像下采样为 110 * 84 像素的灰度图像。</p>
+</li>
+<li><p>然后裁剪 84 * 84 像素的图像区域，主要包含 agent 正在运作的相关区域。</p>
+</li>
+<li><p>最后 $\phi$ 将裁剪后的历史状态最后 4 帧图像堆叠成一个向量，输入到 Q 网络中。</p>
+</li>
+</ul>
+<h3 id="4-2-网络结构"><a href="#4-2-网络结构" class="headerlink" title="4.2 网络结构"></a>4.2 网络结构</h3><ul>
+<li><p>第一层隐藏层采用 16 个 8 * 8 卷积核，步长为 4。采用非线性激活函数。</p>
+</li>
+<li><p>第二层隐藏层采用 32 个 4 * 4 卷积核，步长为 2。采用非线性激活函数。</p>
+</li>
+<li><p>最后一层隐藏层采用全连接层，并输出 256 个非线性激活函数的值。</p>
+</li>
+<li><p>输出层采用全连接线性的方式，并为每个动作输出一个 Q 值。</p>
+</li>
+</ul>
+<p>非线性激活函数第二篇论文中有提及，应该是 $max(0, x)$。</p>
+<h3 id="4-3-其他设置"><a href="#4-3-其他设置" class="headerlink" title="4.3 其他设置"></a>4.3 其他设置</h3><ul>
+<li><p>由于每个游戏环境的 reward 范围不同，因此论文将正的 reward 限制为1，负的 reward 限制为-1，reward 值为0时保持不变。</p>
+</li>
+<li><p>采用 RMSProp 优化算法，mini-batch 的大小是32。$\epsilon$ -贪婪算法中的超参数 $\epsilon$ 在前面<strong>一百万</strong>时间步长中从1 退火到 0.1，最后保持不变。</p>
+</li>
+<li><p>训练<strong>一千万</strong>时间步长，经验回放池中存储最近<strong>一百万</strong>个帧。</p>
+</li>
+<li><p>游戏画面每隔 $k$ 帧，agent 就会选择一个新的动作。因为游戏仿真器的运算速度大于 DQN 模型计算动作的速度，为了防止画面卡顿，故此采用这样一个跳帧的方法。 $k$ 一般取值为4。</p>
+</li>
+<li><p>性能的度量标准采用的是预测的动作-价值函数 Q，而不是总的奖励值。</p>
+</li>
+<li><p>对于学习后的模型，选择动作还是采用 $\epsilon$ -贪婪策略，其中 $\epsilon$ 取值0.05。</p>
+</li>
+</ul>
+<h2 id="5-可以提升的地方"><a href="#5-可以提升的地方" class="headerlink" title="5. 可以提升的地方"></a>5. 可以提升的地方</h2><p>经验回放池只能存储最近的 $N$ 条经验，采样用的是均匀分布。但是一种更合理的方式应该是给这些经验值分配不同的重要性权重，从而将新的经验代替那些不重要的经验。</p>
+<h1 id="二、-Nature-DQN：独立目标函数-2"><a href="#二、-Nature-DQN：独立目标函数-2" class="headerlink" title="二、 Nature DQN：独立目标函数 [2]"></a>二、 Nature DQN：独立目标函数 <a href="#id2">[2]</a></h1><h2 id="1-使用深层网络描述-Q-函数的问题"><a href="#1-使用深层网络描述-Q-函数的问题" class="headerlink" title="1. 使用深层网络描述 Q 函数的问题"></a>1. 使用深层网络描述 Q 函数的问题</h2><p>已经有相关研究指出使用非线性函数逼近器对动作-值函数（Q 函数）进行逼近存在发散问题。这种不稳定来源于以下一些原因：</p>
+<ul>
+<li><p>用于训练的状态是一个序列，该序列中的前后的状态高度相关。</p>
+</li>
+<li><p>Q 网络的参数有微小更新就会导致策略发生巨大变化，并因此导致训练样本分布的巨大变化。</p>
+</li>
+<li><p><strong>目标函数中使用的 Q 函数（目标 Q 函数）和待优化 Q 函数（在线 Q 函数或估计 Q 函数）之间存在参数联系，每次更新的目标都是固定上次更新的参数得来，优化目标跟着优化过程一直在变。</strong></p>
+</li>
+</ul>
+<p>第一篇论文解决了前两个问题，但第三个问题还是存在的。目标 Q 函数参数的计算仍然依赖于估计 Q 函数的参数。</p>
+<h2 id="2-论文中提出的解决方法"><a href="#2-论文中提出的解决方法" class="headerlink" title="2. 论文中提出的解决方法"></a>2. 论文中提出的解决方法</h2><p>在第一篇 DQN 论文中，通过使用经验回放有效的解决了前两个问题，通过存储并随机采样经验来打破了样本之间的相关性，同时平滑了训练样本数据分布。</p>
+<p><strong>第三个问题则是这次改进完成的。通过让在线 Q 函数参数更新一定周期之后再去更新目标 Q 函数的参数，从而降低了目标 Q 函数与在线 Q 函数之间的相关性。</strong></p>
+<p>迭代更新 i 次后的损失函数表示如下：</p>
+<script type="math/tex; mode=display">L_i(\theta_i) = \mathbb{E}_{(s,a,r,s') \sim U(\mathcal{D})} \left[ (r + \gamma max_{a'} Q(s',a';\theta_i^-) - Q(s,a;\theta_i))^2 \right]</script><p>对比上篇论文3.1节的<a href="#eq3.1">公式</a>，可以发现目标 Q 函数中的参数是 $\theta^-$，而不是$\theta_{i-1}$。$\theta^-$ 是每经过 C 个步长从在线 Q 函数中复制而来，然后保留不变。在目标 Q 网络参数更新和在线 Q 网络参数更新之间增加一个时延可以减缓参数更新的分散和抖动。</p>
+<p><strong>最后本篇论文中还有一个小改进：进行误差裁剪。将上述损失函数中的 $r+\gamma Q(s,a;\theta^- - Q(s,a;\theta_i))$ 裁剪到范围（-1， 1），这可以提高算法的稳定性。</strong></p>
+<p>本篇论文的伪代码如下：<br><img src="/2019/09/12/DQN相关论文笔记（上）/natureDQN_peseudocode.png" alt="natureDQN_peseudocode"></p>
+<p>可以发现比上篇论文的伪代码多了独立目标 Q 网络的参数 $\theta^-$。另外奖励裁剪和误差裁剪并没有体现在伪代码中，但实际应用时是用到的。</p>
+<h2 id="3-工程上的设置"><a href="#3-工程上的设置" class="headerlink" title="3. 工程上的设置"></a>3. 工程上的设置</h2><h3 id="3-1-预处理"><a href="#3-1-预处理" class="headerlink" title="3.1 预处理"></a>3.1 预处理</h3><ul>
+<li><p>对每一帧进行编码时，取当前帧和前一帧每个像素颜色值的最大值。</p>
+</li>
+<li><p>将 RGB 帧转换为灰度帧，并裁剪大小为84 * 84。</p>
+</li>
+<li><p>预处理函数 $\phi$ 将每四个邻近帧作为状态输入到 Q 网络。</p>
+</li>
+</ul>
+<h3 id="3-2-网络结构"><a href="#3-2-网络结构" class="headerlink" title="3.2 网络结构"></a>3.2 网络结构</h3><ul>
+<li><p>不像以前一些方法，采用状态-动作对作为输入。<strong>DQN 的 Q 网络将状态表示作为输入，然后为每个动作输出一个 Q 值</strong>。</p>
+</li>
+<li><p>输入层是经过预处理和函数 $\phi$ 映射的 84 * 84 * 4 的灰度像素值</p>
+</li>
+<li><p>第一层隐藏层采用32个8 * 8，步长为4的卷积核，采用非线性激活函数（可能是 $\max(0,x)$）。</p>
+</li>
+<li><p>第二层隐藏层采用64个4 * 4，步长为2的卷积核，采用非线性激活函数。</p>
+</li>
+<li><p>第三层隐藏层采用64个3 * 3，步长为1的卷积核，采用非线性激活函数。</p>
+</li>
+<li><p>第四层隐藏层采用全连接层，输出为512维向量，采用非线性激活函数。</p>
+</li>
+<li><p>输出层是一个全连接层，对每个动作值对应一个输出。</p>
+</li>
+</ul>
+<p>这篇 DQN 论文相对于第一篇的网络结构更加复杂和庞大，隐藏层多了一层。</p>
+<h3 id="3-3-超参数的选取"><a href="#3-3-超参数的选取" class="headerlink" title="3.3 超参数的选取"></a>3.3 超参数的选取</h3><p>所有超参数的选取并非通过系统的搜索而得到，只是在一些游戏上做非正式的搜索得到的。因为超参数的选取十分重要，因此放一下论文中的截图，以备之后参考：<br><img src="/2019/09/12/DQN相关论文笔记（上）/DQN_hyperparameters.png" alt="DQN 超参数选取表"></p>
+<h3 id="3-4-其他设置"><a href="#3-4-其他设置" class="headerlink" title="3.4 其他设置"></a>3.4 其他设置</h3><p>奖励裁剪、优化算法、跳帧数与第一篇 DQN 论文是一样的。</p>
+<h3 id="3-5-评估过程的设置"><a href="#3-5-评估过程的设置" class="headerlink" title="3.5 评估过程的设置"></a>3.5 评估过程的设置</h3><p>每个游戏玩30次，采用 $\epsilon$ -贪婪策略，其中$\epsilon=0.05$。</p>
+<h2 id="4-DQN-学习到的特征表示"><a href="#4-DQN-学习到的特征表示" class="headerlink" title="4. DQN 学习到的特征表示"></a>4. DQN 学习到的特征表示</h2><p>DQN 可以将视觉上相似的画面表示成邻近的特征，并且还可以将奖励相似但视觉上不相似的画面也表示为邻近的特征，这说明 DQN 学习到的特征能够很好地预测 Q 值。<br><img src="/2019/09/12/DQN相关论文笔记（上）/DQN_representation.png" alt="DQN 学习到的特征图"><br>上图是采用 <em>t-SNE</em> 方法绘制的最后一层隐藏层输出的状态特征分布图。颜色越红，表示动作-值越大。左下方，右上方和中下方三组图，每组里面的图像从视觉上看是相似的，经过 DQN 输出的特征表示也是邻近的。而左上方，中上方和右下方三组图，虽然每组里面的图像从视觉上看不相似，但是它们的动作-值是相似的，因此经过 DQN 输出的特征表示也是邻近的。</p>
+<h2 id="5-DQN-的核心点"><a href="#5-DQN-的核心点" class="headerlink" title="5. DQN 的核心点"></a>5. DQN 的核心点</h2><p>这篇论文中指出 DQN 的核心之处有三点：</p>
+<ul>
+<li><p>使用了经验回放池</p>
+</li>
+<li><p>使用了独立的目标 Q 函数</p>
+</li>
+<li><p>深度卷积网络的设计</p>
+</li>
+</ul>
+<h2 id="6-DQN-目前不能解决的问题"><a href="#6-DQN-目前不能解决的问题" class="headerlink" title="6. DQN 目前不能解决的问题"></a>6. DQN 目前不能解决的问题</h2><p>long-term credit assignment 问题，也就是无法处理需要长远规划的策略。如果决策需要考虑的时间维度太长，DQN 可能无法学习出比较合适的策略。</p>
+<h2 id="7-DQN-的神经生物学基础"><a href="#7-DQN-的神经生物学基础" class="headerlink" title="7. DQN 的神经生物学基础"></a>7. DQN 的神经生物学基础</h2><p>DQN 是端到端强化学习方法，特征的学习和策略的学习并不是分开的，而是结合通过卷积神经网络结合在一起。获得的奖励会随时影响到卷积网络中的特征学习，然后制定出更好的策略，获取更好的奖励。在生物神经学中，已经有证据表明，<strong>在感知学习过程中，奖励信号可能会影响灵长类视觉皮质内表征的特征</strong>。</p>
+<p>另外 DQN 中最重要的技巧——经验回放池，在神经生物学中也可以找到相似的机制。哺乳动物的海马体中存在一种物理机制，会在休息时间将最近经历过的经验轨迹重新激活（快速回放）。这意味着可以推测出动作-值函数可以通过历史经验进行学习。</p>
+<p>不过海马体中对重要经验会存在更为深刻的印象，因此经验回放池也可以对经历过的经验分配不同的偏置权重，这是强化学习中的另一个话题，称为 <em>prioritized sweeping</em>。（上一篇论文中也提到过）</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/DQN/" rel="tag"># DQN</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/09/11/hexo-next渲染数学公式/" rel="next" title="hexo+next渲染数学公式">
+                  <i class="fa fa-chevron-left"></i> hexo+next渲染数学公式
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/09/16/DQN相关论文笔记（下）/" rel="prev" title="DQN相关论文笔记（下）">
+                  DQN相关论文笔记（下） <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、-DQN：成功将DL和RL结合-1"><span class="nav-text">一、 DQN：成功将DL和RL结合 [1]</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-DQN-简述"><span class="nav-text">1. DQN 简述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-RL-结合深度学习的问题"><span class="nav-text">1.1 RL 结合深度学习的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-本篇论文的工作"><span class="nav-text">1.2 本篇论文的工作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法模型"><span class="nav-text">3. 算法模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-DQN-的关键点"><span class="nav-text">3.1 DQN 的关键点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-DQN-的优点"><span class="nav-text">3.2 DQN 的优点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-工程上的设置"><span class="nav-text">4. 工程上的设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-预处理函数-phi-的定义"><span class="nav-text">4.1 预处理函数 $\phi$ 的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-网络结构"><span class="nav-text">4.2 网络结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-其他设置"><span class="nav-text">4.3 其他设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-可以提升的地方"><span class="nav-text">5. 可以提升的地方</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二、-Nature-DQN：独立目标函数-2"><span class="nav-text">二、 Nature DQN：独立目标函数 [2]</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-使用深层网络描述-Q-函数的问题"><span class="nav-text">1. 使用深层网络描述 Q 函数的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-论文中提出的解决方法"><span class="nav-text">2. 论文中提出的解决方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-工程上的设置"><span class="nav-text">3. 工程上的设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-预处理"><span class="nav-text">3.1 预处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-网络结构"><span class="nav-text">3.2 网络结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-超参数的选取"><span class="nav-text">3.3 超参数的选取</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-其他设置"><span class="nav-text">3.4 其他设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-评估过程的设置"><span class="nav-text">3.5 评估过程的设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-DQN-学习到的特征表示"><span class="nav-text">4. DQN 学习到的特征表示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-DQN-的核心点"><span class="nav-text">5. DQN 的核心点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-DQN-目前不能解决的问题"><span class="nav-text">6. DQN 目前不能解决的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-DQN-的神经生物学基础"><span class="nav-text">7. DQN 的神经生物学基础</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

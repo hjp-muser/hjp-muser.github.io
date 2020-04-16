@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Nachum, O., Norouzi, M., Xu, K., &amp;amp; Schuurmans, D. (2018). TruST-PCL: An off-policy trust region method for continuous control. 6th International Conference on Learning Representations, ICLR 2018 -">
+<meta name="keywords" content="强化学习,AC,Trust Region,PCL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Trust Region Path Consistency Learning (Trust-PCL)">
+<meta property="og:url" content="http://yoursite.com/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="Nachum, O., Norouzi, M., Xu, K., &amp;amp; Schuurmans, D. (2018). TruST-PCL: An off-policy trust region method for continuous control. 6th International Conference on Learning Representations, ICLR 2018 -">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/04/04/Trust%20Region%20Path%20Consistency%20Learning%20(Trust-PCL)/Trust-PCL.png">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.264Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Trust Region Path Consistency Learning (Trust-PCL)">
+<meta name="twitter:description" content="Nachum, O., Norouzi, M., Xu, K., &amp;amp; Schuurmans, D. (2018). TruST-PCL: An off-policy trust region method for continuous control. 6th International Conference on Learning Representations, ICLR 2018 -">
+<meta name="twitter:image" content="http://yoursite.com/2020/04/04/Trust%20Region%20Path%20Consistency%20Learning%20(Trust-PCL)/Trust-PCL.png">
+  <link rel="canonical" href="http://yoursite.com/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Trust Region Path Consistency Learning (Trust-PCL) | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Trust Region Path Consistency Learning (Trust-PCL)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-04-04 16:11:40" itemprop="dateCreated datePublished" datetime="2020-04-04T16:11:40+08:00">2020-04-04</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Nachum, O., Norouzi, M., Xu, K., &amp; Schuurmans, D. (2018). TruST-PCL: An off-policy trust region method for continuous control. 6th International Conference on Learning Representations, ICLR 2018 - Conference Track Proceedings, 1–14.</p>
+<h2 id="1-论文概述"><a href="#1-论文概述" class="headerlink" title="1. 论文概述"></a>1. 论文概述</h2><p>TRPO 在连续空间的强化学习上获得了成功，提高了基于策略梯度强化学习方法的稳定性和收敛速度。但是，当前的基于置信域优化的方法需要和环境进行大量的 on-policy 交互，样本效率很低。DDPG 是成功运用在连续环境中的 off-policy 强化学习方法，但是 DDPG 牺牲了稳定性来提升了样本效率，同时非常依赖于超参数的选取。</p>
+<p>本文为了解决 on-policy 置信域方法的样本效率问题，提出了 Trust-PCL 方法。Trust-PCL 方法是基于 PCL 方法 <a href="#ref1">[1]</a> 的路径一致性原理，即在任意连续的子轨迹中，状态值和熵正则化的最优策略间满足一致性关系。Trust-PCL 方法引入了相对熵正则化器，保证了优化的稳定性。本文得到一个结论是，向最大奖励的强化学习目标引入相对熵正则化器之后，状态值和熵正则化的最优策略间依然对任意的轨迹满足一致性关系。</p>
+<p>此外，本文提出了一种简单的方法来确定相对熵调整器的系数，使之不受奖励尺度的影响。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>梯度下降是神经网络优化的主要方法。不过，梯度下降其实也是一种置信域约束优化的形式：</p>
+<script type="math/tex; mode=display">
+\mathscr{minimize} \;\; \ell(\theta+d\theta) \approx \ell(\theta) + \nabla \ell(\theta)^T d\theta \;\;\;\; s.t. \;\; d\theta^Td\theta \le \epsilon
+\tag{1}</script><p>其中局部最优化表示为 $d\theta = \eta \nabla \ell(\theta)$，解得 $\eta = \sqrt{\epsilon} / | \nabla \ell(\theta) |$ 。实质上，梯度下降是考虑参数位于欧几里得空间。</p>
+<p>但是对于机器学习中的多层网络，欧几里得几何实际上并不是最佳描述参数距离的空间。</p>
+<p>通常更有效的是采用<a href="https://www.zhihu.com/question/36959297" target="_blank" rel="noopener">黎曼度量</a>，这样能在局部区域中找到更陡峭的梯度方向（简单理解就是，曲线空间的两点，最短距离不是直线，而是曲线）。</p>
+<p>如果将损失函数定义为模型参数和最优参数间的<a href="https://www.zhihu.com/question/22426561" target="_blank" rel="noopener">布雷格曼散度</a>（Bregman divergence），置信域的形式通常会写成：</p>
+<script type="math/tex; mode=display">
+\mathscr{minimize} \;\; D_F(\theta^*,\theta+d\theta) \;\;\;\; s.t. \;\; D_F(\theta,\theta+d\theta) \le \epsilon
+\tag{2}</script><p>$F$ 函数的选择不同，布雷格曼散度的形式就不同。</p>
+<p>自然梯度利用费舍尔矩阵 $F(\theta)$ 来定义参数空间。这样损失函数实际上是 KL 散度 $D_{KL}(\theta^*,\theta)$，置信域优化可以写成：</p>
+<script type="math/tex; mode=display">
+\mathscr{minimize} \;\; D_{KL}(\theta^*,\theta+d\theta) \;\;\;\; s.t. \;\; D_{KL}(\theta,\theta+d\theta) \approx d\theta^T F(\theta) d\theta \le \epsilon
+\tag{3}
+\label{3}</script><p>其中梯度方向：$d\theta \equiv -\eta F(\theta)^{-1}\nabla \ell(\theta)$ 。自然梯度对 KL 散度的近似形式为：$D_{KL}(a,b) \approx (a-b)^TF(a)(a-b)$，该近似是二阶泰勒展开。</p>
+<p>紧接着，TRPO <a href="#ref2">[2]</a> 对自然梯度的逼近方法进行改善，将自然梯度方法引入到强化学习非线性策略的优化中。另外，最近端优化方法将置信域优化中的硬性约束替换为目标函数中的惩罚项，PPO <a href="#ref3">[3]</a> 算法就是将最近端优化方法应用于强化学习策略的学习中。</p>
+<p>论文 <a href="#ref4">[4]</a> 中将熵正则化的奖励目标函数表示成反向的 KL 散度 $D_{KL}(\theta,\theta^*)$ 。也就是说，在这种正则化的奖励目标下，公式 $\eqref{3}$ 应该写成：</p>
+<script type="math/tex; mode=display">
+\mathscr{minimize} \;\; D_{KL}(\theta+d\theta,\theta^*) \;\;\;\; s.t. \;\; D_{KL}(\theta+d\theta,\theta) \approx d\theta^T F(\theta+d\theta) d\theta \le \epsilon
+\tag{4}</script><p>但是问题在于此时费舍尔矩阵 $F(\theta+d\theta)$ 的求解依赖于更新后的参数，虽然可以用 $F(\theta)$ 进行近似，但对于较大的 $d\theta$ 而言则不太理想。</p>
+<p>本文给出了反向 KL 散度 $D_{KL}(\theta+d\theta,\theta) \le \epsilon$ 的另一种解法，也就成功将熵正则化框架和置信域策略优化结合起来。</p>
+<p>下面给出相关算法的符号定义和目标公式。</p>
+<h3 id="2-1-最大化期望奖励"><a href="#2-1-最大化期望奖励" class="headerlink" title="2.1  最大化期望奖励"></a>2.1  最大化期望奖励</h3><p>标准强化学习的目标就是最大化期望未来折扣奖励。在每个状态的基础上，对该目标递归表示为：</p>
+<script type="math/tex; mode=display">
+O_{ER}(s,\pi) = \mathbb{E}_{a,r,s'}[r + \gamma O_{ER}(s',\pi)]
+\tag{5}</script><p>当从与环境的交互中对状态进行采样时，与状态无关的目标是每个状态的目标函数的期望：</p>
+<script type="math/tex; mode=display">
+O_{ER}(\pi) = \mathbb{E}_s[O_{ER}(s,\pi)]
+\tag{6}</script><h3 id="2-2-Path-Consistency-Learning"><a href="#2-2-Path-Consistency-Learning" class="headerlink" title="2.2 Path Consistency Learning"></a>2.2 Path Consistency Learning</h3><p>PCL 是本文算法的前身，也是一个引入熵正则化框架的强化学习方法。带熵正则化的强化学习目标为：</p>
+<script type="math/tex; mode=display">
+O_{ENT}(s,\pi) = O_{ER}(s,\pi) + \tau \mathbb{H}(s,\pi)
+\tag{7}
+\label{7}</script><p>折扣熵 $\mathbb{H}(s,\pi)$ 的递归表示形式为：</p>
+<script type="math/tex; mode=display">
+\mathbb{H}(s,\pi) = \mathbb{E}_{a,s'} [-\log \pi(a|s)+\gamma \mathbb{H}(s',\pi)]
+\tag{8}
+\label{8}</script><p>结合公式 $\eqref{7}$ 和公式 $\eqref{8}$，带熵正则化的强化学习目标 $O_{ENT}(s,\pi)$ 可以重新表示为递归形式：</p>
+<script type="math/tex; mode=display">
+O_{ENT}(s,\pi) = \mathbb{E}_{a,r,s'}[r - \tau \log \pi(a|s) + \gamma O_{ENT}(s',\pi)]
+\tag{9}
+\label{9}</script><p>PCL 的论文 <a href="#ref1">[1]</a> 中得到了对于任意路径（轨迹）的最优状态值和最优策略的一致性关系：</p>
+<script type="math/tex; mode=display">
+V^*(s_0) = \mathbb{E}_{r_i,s_i} \left[ \gamma^d V^*(s_d) + \sum_{i=0}^{d-1} \gamma^i (r_i-\tau \log \pi^*(a_i|s_i)) \right]
+\tag{10}</script><p>其中 $\pi^<em>$ 是最大化目标 $O_{ENT}(s)$ 的最优策略，最优状态值函数 $V^</em>(s) = O_{ENT}(s,\pi^*)$ 。PCL 的目标就是同时优化 $\pi_\theta$ 和 $V_\phi$ 的参数，减小等式两边的误差。</p>
+<h3 id="2-3-Trust-Region-Policy-Optimization"><a href="#2-3-Trust-Region-Policy-Optimization" class="headerlink" title="2.3 Trust Region Policy Optimization"></a>2.3 Trust Region Policy Optimization</h3><p>采用标准的策略梯度算法对标准强化学习目标 $O_{ER}$ 进行优化是很不稳定的，TRPO <a href="#ref2">[2]</a> 通过置信域优化的方法来限制策略更新的幅度，表示为一个带约束的优化问题：</p>
+<script type="math/tex; mode=display">
+\mathop{\mathscr{maximize}}_\pi O_{ER}(\pi) \;\;\;\; s.t. \;\;\;\; \mathbb{E}_{s \sim \tilde{\pi},\rho}[KL(\tilde \pi(\cdot|s) \| \pi(\cdot|s) )] \le \epsilon
+\tag{11}</script><h2 id="3-算法推导"><a href="#3-算法推导" class="headerlink" title="3. 算法推导"></a>3. 算法推导</h2><p>为了更稳定地对参数空间进行训练，本文对带熵正则化的强化学习目标 $O_{ENT}(s,\pi)$ 进行扩展，引入与更新前的策略（也可以称为目标策略）相关的折扣相对熵置信域：</p>
+<script type="math/tex; mode=display">
+\mathop{\mathscr{maximize}}_\pi \mathbb{E}_s[O_{ENT}(\pi)] \;\;\;\; s.t. \;\;\;\; \mathbb{E}_s[\mathbb{G}(s,\pi,\tilde \pi)] \le \epsilon
+\tag{12}</script><p>其中折扣相对熵 $\mathbb{G}(s,\pi,\tilde \pi)$ 的递归表达式为：</p>
+<script type="math/tex; mode=display">
+\mathbb{G}({s,\pi, \tilde \pi}) = \mathbb{E}_{a,s'} [\log \pi(a|s) - \log \tilde \pi(a|s) + \gamma \mathbb{G}(s',\pi,\tilde \pi)]
+\tag{13}
+\label{13}</script><p>尽管之前的强化学习方法已经单独与熵正则化和相对熵结合，但是同时让强化学习同时与熵正则化和相对熵结合还是第一次，也是本文一个亮点。熵正则化可以提高探索率，而引入相对熵置信域能保障训练的稳定性和更快的训练速度。</p>
+<p>对公式 $\eqref{13}$ 用拉格朗日乘法表示，现在带约束的最优化问题转变为不带约束的最大化问题：</p>
+<script type="math/tex; mode=display">
+O_{RELENT}(s,\pi) = O_{ENT}(s,\pi) - \lambda \mathbb{G}(s,\pi,\tilde \pi)
+\tag{14}
+\label{14}</script><p>与状态无关的目标通过对每个状态的目标函数取期望得到：</p>
+<script type="math/tex; mode=display">
+O_{RELENT}(\pi) = \mathbb{E}_s [O_{RELENT}(s,\pi)]
+\tag{15}</script><h3 id="3-1-引入相对熵的-PCL"><a href="#3-1-引入相对熵的-PCL" class="headerlink" title="3.1 引入相对熵的 PCL"></a>3.1 引入相对熵的 PCL</h3><p>引入相对熵后的目标 $O_{RELENT}$ 和熵正则化目标 $O_{ENT}$ 其实有相似的结构，可以将 $O_{RELENT}$ 也表示成熵正则化目标的形式，只不过此时奖励函数的形式发生了一点变化。</p>
+<script type="math/tex; mode=display">
+O_{RELENT}(s,\pi) = \tilde O_{ER}(s,\pi) + (\tau + \lambda) \mathbb{H}(s,\pi)
+\tag{16}</script><p>其中 $\tilde O_{ER}(s,\pi)$ 表示标准的强化学习目标（头上带有波浪线表示发生了一点转换）。但是奖励函数的形式发生了一点变换：$\tilde r(s,a) = r(s,a) + \lambda \log \tilde \pi(a|s)$ 。</p>
+<p>由于 $O_{RELENT}(\pi)$ 的形式与 $O_{ENT}(\pi)$ 相似，可以直接引用 PCL 论文 <a href="#ref1">[1]</a> 中的推导结果。最优策略 $\pi^*$ 的表达式如下：</p>
+<script type="math/tex; mode=display">
+\pi^*(a_t|s_t) = \exp \left\{ \frac{\mathbb{E}_{\tilde r_t \sim \tilde r(s_t,a_t), s_{t+1}} [\tilde r_t + \gamma V^*(s_{t+1})] - V^*(s_t)}{\tau+\lambda} \right\}
+\tag{17}
+\label{17}</script><p>softmax 最优值函数表示为：</p>
+<script type="math/tex; mode=display">
+V^*(s_t) = (\tau+\lambda) \log \int_\mathcal{A} \exp \left\{ \frac{\mathbb{E}_{\tilde r_t \sim \tilde r(s_t,a_t), s_{t+1}} [\tilde r_t + \gamma V^*(s_{t+1})]}{\tau+\lambda} \right\} da 
+\tag{18}</script><p>对公式 $\eqref{17}$ 重新整理，可以得到最优策略 $\pi^<em>$ 和最优值函数 $V^</em>$ 的一致性关系：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+V^*(s_t) &= \mathbb{E}_{\tilde r_t \sim \tilde r(s_t,a_t), s_{t+1}} [\tilde r_t - (\tau+\lambda) \log \pi^*(a_t|s_t) + \gamma V^*(s_{t+1})] \\
+&= \mathbb{E}_{r_t,s_{t+1}} [r_t - (\tau+\lambda) \log \pi^*(a_t|s_t) + \lambda \log \tilde \pi(a_t|s_t) + \gamma V^*(s_{t+1})]
+\end{aligned}
+\tag{19}
+\label{19}</script><p>公式 $\eqref{19}$ 是 one-step 的一致性关系，因为 PCL 对任意路径都成立，所以可以扩展成 multi-step 的形式：</p>
+<script type="math/tex; mode=display">
+V^*(s_t) = \mathbb{E}_{r_{t+i},s_{t+i}} \left[\gamma^d V^*(s_{t+d}) + \sum_{i=0}^{d-1} \gamma^i (r_{t+i} - (\tau+\lambda) \log \pi^*(a_{t+i}|s_{t+i}) + \lambda \log \tilde \pi(a_{t+i}|s_{t+i})) \right]
+\tag{20}</script><h3 id="3-2-Trust-PCL"><a href="#3-2-Trust-PCL" class="headerlink" title="3.2 Trust-PCL"></a>3.2 Trust-PCL</h3><p>和 PCL 的目标函数一样，为了训练参数化策略 $\pi_\theta$ 和参数化状态函数 $V_\phi$，构造对于采样轨迹 $s_{t:t+d} \equiv (s_t,a_t,r_t,\cdots,s_{t+d-1},a_{t+d-1},r_{t+d-1},s_{t+d})$ 的一致性误差函数为：</p>
+<script type="math/tex; mode=display">
+C(s_{t:t+d},\theta,\phi) = -V_\phi(s_t) + \gamma^d V_\phi(s_{t+d}) + \sum_{i=0}^{d-1} \gamma^i \left(r_{t+i} - (\tau+\lambda) \log \pi_\theta(a_{t+i}|s_{t+i}) + \lambda \log \pi_{\tilde \theta}(a_{t+i}|s_{t+i}) \right)
+\tag{21}</script><p>对于一个 mini-batch 轨迹集合 $S = \{ s_{0:T_k}^{(k)} \}_{k=1}^B$，损失函数为：</p>
+<script type="math/tex; mode=display">
+\mathcal{L}(S,\theta,\phi) = \sum_{k=1}^B \sum_{t=0}^{T_k-1} C(s_{t:t+d}^{(k)},\theta,\phi)^2
+\tag{22}</script><p>训练时，采用的是 off-policy 方法，即从经验池中采样轨迹集合 $S$。每个样本加入经验池时都带有自己的优先级，该优先级与 PCL 论文中的定义相似：</p>
+<script type="math/tex; mode=display">
+P(s_{0:T}) = 0.1/B + 0.9 \exp(\beta \sum_{i=0}^{T-1} r(s_i,a_i)) / Z
+\tag{23}</script><p>其中 $B$ 表示经验池的大小，$Z$ 表示归一化因子。$\beta$ 是可调节的超参数。</p>
+<p>对于更新前的策略（或称为目标策略） $\pi_{\tilde \theta}$ 的参数更新，采用的更新方式为 $\tilde \theta = \alpha \tilde \theta + (1-\alpha) \theta$ 。</p>
+<h3 id="3-3-拉格朗日乘数-lambda"><a href="#3-3-拉格朗日乘数-lambda" class="headerlink" title="3.3 拉格朗日乘数 $\lambda$"></a>3.3 拉格朗日乘数 $\lambda$</h3><p>如果将相对熵项视为惩罚项而不是约束项，如公式 $\eqref{14}$ 所示，那么拉格朗日乘数 $\lambda$ 将成为一个超参数，这个超参数的调节有很大的困难，实际上在训练过程中，超参数是需要随训练进程而变化的。因此将相对熵视为约束项可能是更好的选择，TRPO 中也是视为约束项。</p>
+<p>本文提出了一种新的方法，将超参数从 $\lambda$ 重定向为超参数 $\epsilon$ 。给定由超参数 $\epsilon$ 定义的约束项，这个方法可以得到近似惩罚项 $\lambda(\epsilon)$ ，此时 $\lambda$ 不再是超参数，而是关于 $\epsilon$ 的函数，或者说一个自动调节的超参数。这也是本文的亮点之一。</p>
+<p>为了便于分析，本文进行了一些限制，例如令 $\gamma = 1$，$\tau = 0$。另一个限制就是从单独的初状态 $s_0$ 开始求解 KL 散度与真实的 KL 散度相差不大。实际实验中不会进行限制，但是结果表现得一样好。</p>
+<p>在这种限制下，对于完整的一个 episode $s_{0:T}=(s_0,a_0,r_0,\cdots,s_{T-1},a_{T-1},r_{T-1},s_T)$，由公式 $\eqref{17}$ 可以得到：</p>
+<script type="math/tex; mode=display">
+\pi^*(s_{0:T}) \propto \tilde \pi(s_{0:T}) \exp \left\{ \frac{R(s_{0:T})}{\lambda} \right\}
+\tag{24}
+\label{24}</script><p>其中 $\pi(s_{0:T}) = \prod_{i=0}^{T-1} \pi(a_i|s_i)$ ，$R(s_{0:T}) = \sum_{i=0}^{T-1} r_i$ 。$\pi^*$ 的归一化因子为：</p>
+<script type="math/tex; mode=display">
+Z = \mathbb{E}_{s_{0:T}\sim \tilde \pi} \left[ \exp \left\{ \frac{R(s_{0:T})}{\lambda} \right\} \right]
+\tag{25}
+\label{25}</script><p>公式 $\eqref{24}$ 和 $\eqref{25}$ 的推导其实并不怎么严格，很大程度依赖于假设。接下来利用这两条公式得到 $\pi^*$ 和 $\tilde \pi$ 的近似 KL 散度。</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+KL(\pi^*\| \tilde \pi) &= \mathbb{E}_{s_{0:T}\sim \pi^*} \left[ \log \left( \frac{\pi^*(s_{0:T})}{\tilde \pi(s_{0:T})} \right) \right] \\
+&= \mathbb{E}_{s_{0:T}\sim \pi^*} \left[ \frac{R(s_{0:T})}{\lambda} - \log Z \right] \\
+&= -\log Z + \mathbb{E}_{s_{0:T} \sim \tilde \pi} \left[ \frac{R(s_{0:T})}{\lambda} \cdot \frac{\pi^*(s_{0:T})}{\tilde \pi(s_{0:T})} \right] \\
+&= -\log Z + \mathbb{E}_{s_0:T\sim \tilde \pi} \left[ \frac{R(s_{0:T})}{\lambda} \exp\{ R(s_{0:T}/\lambda - \log Z) \} \right]
+\end{aligned}
+\tag{26}
+\label{26}</script><p>公式 $\eqref{24}$ 中的期望只与 $\tilde \pi$ 有关，因此可以通过对策略 $\tilde \pi$ 进行采样计算。有了 $\tilde \pi$ 采样的轨迹，给定的超参数 $\epsilon$ ，为了得到最优的 $\lambda$，只需要执行线性搜索，使得 $KL(\pi^*|\pi)$ 尽量靠近 $\epsilon$ 即可。</p>
+<p>但是还有一个问题，就是 $\epsilon$ 是否应该随着训练的进程改变。考虑到随着训练的进行，一个 episode 的长度可能会变长，此时 $KL(\pi^*|\tilde \pi)$ 也会变大，相反也一样。为了同等地改变相对熵的约束范围，利用多个 episode 采样轨迹的集合 $S= \{s_{0:T_k}^{(k)} \}^N_{k=1}$， $\epsilon$ 可以修订为：$\frac{\epsilon}{N} \sum_{k=1}^N T_k$ 。$T_k$ 就表示第 $k$ 个 episode 的长度。不过为了避免和环境进行过多的交互，本文对这个集合 $S$ 取最后 100 个 episode 来计算平均 episode 长度。</p>
+<h3 id="3-4-伪代码"><a href="#3-4-伪代码" class="headerlink" title="3.4 伪代码"></a>3.4 伪代码</h3><p><img src="/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/Trust-PCL.png" alt="image-20200406125341081" style="zoom: 80%;"></p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><h2 id="参考文献-1"><a href="#参考文献-1" class="headerlink" title="参考文献"></a>参考文献</h2><p><span id="#ref1">[1]</span> Nachum, O., Norouzi, M., Xu, K., &amp; Schuurmans, D. (2017). Bridging the gap between value and policy based reinforcement learning. Advances in Neural Information Processing Systems, 2017-Decem(Nips), 2776–2786.</p>
+<p><span id="#ref2">[2]</span> John Schulman, Sergey Levine, Pieter Abbeel, Michael Jordan, and Philipp Moritz. Trust region policy optimization. In ICML, 2015.</p>
+<p><span id="#ref3">[3]</span> John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347, 2017b.</p>
+<p><span id="#ref4">[4]</span> Norouzi, Mohammad, et al. “Reward augmented maximum likelihood for neural structured prediction.” Advances In Neural Information Processing Systems. 2016.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/AC/" rel="tag"># AC</a>
+            
+              <a href="/tags/Trust-Region/" rel="tag"># Trust Region</a>
+            
+              <a href="/tags/PCL/" rel="tag"># PCL</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/03/27/Path Consistency Learning (PCL)/" rel="next" title="Path Consistency Learning (PCL)">
+                  <i class="fa fa-chevron-left"></i> Path Consistency Learning (PCL)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/04/07/Batch Constrained deep Q-learning (BCQ)/" rel="prev" title="Batch-Constrained deep Q-learning (BCQ)">
+                  Batch-Constrained deep Q-learning (BCQ) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-论文概述"><span class="nav-text">1. 论文概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-最大化期望奖励"><span class="nav-text">2.1  最大化期望奖励</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Path-Consistency-Learning"><span class="nav-text">2.2 Path Consistency Learning</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Trust-Region-Policy-Optimization"><span class="nav-text">2.3 Trust Region Policy Optimization</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法推导"><span class="nav-text">3. 算法推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-引入相对熵的-PCL"><span class="nav-text">3.1 引入相对熵的 PCL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Trust-PCL"><span class="nav-text">3.2 Trust-PCL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-拉格朗日乘数-lambda"><span class="nav-text">3.3 拉格朗日乘数 $\lambda$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-伪代码"><span class="nav-text">3.4 伪代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献-1"><span class="nav-text">参考文献</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

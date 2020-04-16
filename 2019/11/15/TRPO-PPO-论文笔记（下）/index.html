@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="二、 PPO：近端策略优化1. PPO 概述标准的策略梯度方法是在每个数据样本都进行一次梯度更新，PPO 方法可以进行 mini-batch 更新。比起 TRPO，PPO 继承了它部分优点，但是更容易实现，更通用，和更简单的采样方法。TRPO 方法使用了二阶近似，PPO 旨在于用一阶近似来达到 TRPO 类似的效果，同时提高数据的利用效率。通过交替利用策略采样和对采样的数据进行多个 epoch的优">
+<meta name="keywords" content="强化学习,PG,PPO">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TRPO &amp; PPO 论文笔记（下）">
+<meta property="og:url" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="二、 PPO：近端策略优化1. PPO 概述标准的策略梯度方法是在每个数据样本都进行一次梯度更新，PPO 方法可以进行 mini-batch 更新。比起 TRPO，PPO 继承了它部分优点，但是更容易实现，更通用，和更简单的采样方法。TRPO 方法使用了二阶近似，PPO 旨在于用一阶近似来达到 TRPO 类似的效果，同时提高数据的利用效率。通过交替利用策略采样和对采样的数据进行多个 epoch的优">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/PPO_clip_explain.png">
+<meta property="og:image" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/L_clip.png">
+<meta property="og:image" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/PPO_peudo.png">
+<meta property="og:image" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/target_func_comp.png">
+<meta property="og:image" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/diff_method_comp.png">
+<meta property="og:updated_time" content="2019-11-22T04:25:53.669Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TRPO &amp; PPO 论文笔记（下）">
+<meta name="twitter:description" content="二、 PPO：近端策略优化1. PPO 概述标准的策略梯度方法是在每个数据样本都进行一次梯度更新，PPO 方法可以进行 mini-batch 更新。比起 TRPO，PPO 继承了它部分优点，但是更容易实现，更通用，和更简单的采样方法。TRPO 方法使用了二阶近似，PPO 旨在于用一阶近似来达到 TRPO 类似的效果，同时提高数据的利用效率。通过交替利用策略采样和对采样的数据进行多个 epoch的优">
+<meta name="twitter:image" content="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/PPO_clip_explain.png">
+  <link rel="canonical" href="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>TRPO & PPO 论文笔记（下） | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/15/TRPO-PPO-论文笔记（下）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">TRPO & PPO 论文笔记（下）
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-15 00:36:43" itemprop="dateCreated datePublished" datetime="2019-11-15T00:36:43+08:00">2019-11-15</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-11-22 12:25:53" itemprop="dateModified" datetime="2019-11-22T12:25:53+08:00">2019-11-22</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/15/TRPO-PPO-论文笔记（下）/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/11/15/TRPO-PPO-论文笔记（下）/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="二、-PPO：近端策略优化"><a href="#二、-PPO：近端策略优化" class="headerlink" title="二、 PPO：近端策略优化"></a>二、 PPO：近端策略优化</h1><h2 id="1-PPO-概述"><a href="#1-PPO-概述" class="headerlink" title="1. PPO 概述"></a>1. PPO 概述</h2><p>标准的策略梯度方法是在每个数据样本都进行一次梯度更新，PPO 方法可以进行 mini-batch 更新。比起 TRPO，PPO 继承了它部分优点，但是更容易实现，更通用，和更简单的采样方法。TRPO 方法使用了二阶近似，PPO 旨在于用一阶近似来达到 TRPO 类似的效果，同时提高数据的利用效率。通过交替利用策略采样和对采样的数据进行多个 epoch的优化，来提高数据的利用效率。</p>
+<p>在连续的任务上，“概率比截断”版本的 PPO 方法表现得最好。在离散的动作空间任务上，PPO 方法和 ACER 方法效果类似，但更容易实现。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><h3 id="2-1-策略梯度"><a href="#2-1-策略梯度" class="headerlink" title="2.1 策略梯度"></a>2.1 策略梯度</h3><p>策略梯度算法中策略梯度的公式推导结果为：</p>
+<script type="math/tex; mode=display">
+\hat{g}=\hat{\mathbb{E}}_t [\nabla_\theta \log \pi_\theta(a_t|s_t)\hat{A}_t] \tag{2.1}</script><p>其中 $\pi_\theta$ 表示随机策略，$\hat{A}_t$ 是时刻 $t$ 对优势函数的估计值。$\hat{\mathbb{E}}_t$ 表示一个 batch 的样本进行经验估计。</p>
+<p>以上的策略梯度对应的目标函数是：</p>
+<script type="math/tex; mode=display">
+L^{PG}(\theta)=\hat{\mathbb{E}}_t [\log \pi_\theta(a_t|s_t)\hat{A}_t] \tag{2.2}</script><p><strong>虽然可以对以上的目标函数进行多次 epoch 优化，但是这样做实际上是经验主义上的，并且找不到充分的理由，而且还会对较大规模的梯度更新造成破坏。</strong></p>
+<h3 id="2-2-TRPO"><a href="#2-2-TRPO" class="headerlink" title="2.2 TRPO"></a>2.2 TRPO</h3><p>TRPO 中的代理目标函数为：</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_\theta \hat{\mathbb{E}}_t \left[ \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)} \hat{A}_t \right] \tag{2.3}</script><script type="math/tex; mode=display">
+subject \,\, to \,\, \hat{\mathbb{E}}_t \left[ KL[\pi_{\theta_{old}}(\cdot|s_t),\pi_\theta(\cdot|s_t)] \right] \tag{2.4} \le \delta</script><p>然后对目标函数进行进行一阶近似，约束进行二阶近似，然后结合共轭梯度进行求解。</p>
+<p>实际上为 TRPO 提供保证的理论是采用惩罚项，而非约束项（这项理论应用在 Natural PG 中，TRPO 是对这项理论改造后的结果），也就是优化无约束问题，代理目标函数为：</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_\theta \hat{\mathbb{E}}_t \left[ \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)} \hat{A}_t - \beta KL[\pi_{\theta_{old}}(\cdot|s_t),\pi_\theta(\cdot|s_t)] \right] \tag{2.5} \label{2.5}</script><p>其中 $\beta$ 可以看作惩罚因子，是一个超参数。实际上这种代理目标函数背后的理论是优化策略 $\pi$ 的下界，让每次策略更新后的新策略都能得到提升。<strong>但是 $\beta$ 的取值非常难以确定，即使在很简单的问题上，都没办法简单地找到 $\beta$ 值，甚至在同一个问题中，$\beta$ 的取值随着学习过程而改变</strong>。这就导致 TRPO 采用了硬约束的方式，而不是惩罚项。</p>
+<p><strong>所以现在的问题就是，如果我们想在学习过程中找到性能单调递增的策略，光靠简单地选择一个惩罚项系数和 SGD 是不够的，但是使用 TRPO 又太复杂，需要涉及二阶近似，计算量太大。</strong>这个时候 PPO 就出现了。</p>
+<h2 id="3-截断代理目标函数"><a href="#3-截断代理目标函数" class="headerlink" title="3. 截断代理目标函数"></a>3. 截断代理目标函数</h2><p>令 $r_t(\theta)=\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$，很明显，$r(\theta_{old})=1$，TRPO 的代理目标可以重写成：</p>
+<script type="math/tex; mode=display">
+L^{CPI}(\theta)=\hat{\mathbb{E}}_t \left[ \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)} \hat{A}_t \right]= \hat{\mathbb{E}}_t \left[ r_t(\theta)\hat{A}_t \right] \tag{3.1} \label{3.1}</script><p>上标 $CPI$ 表示 conservative policy iteration，是一篇著名文章中提出来的策略迭代方法 <a href="#ref1">[1]</a>，以上的目标函数就是这篇文章所提出来的。注意，此时目标函数没有加上约束，可能会导致很大的梯度更新，导致策略梯度失去意义。</p>
+<p>现在考虑当 $r_t(\theta)$ 偏移 $1$ 的时候进行惩罚，引入截断代理目标函数。将等式 $\eqref{3.1}$ 改写为：</p>
+<script type="math/tex; mode=display">
+L^{CLIP}(\theta)=\hat{\mathbb{E}}_t \left[ min(r_t(\theta)\hat{A_t}, clip(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t) \right] \tag{3.2}</script><p>其中 $\epsilon$ 是一个超参数。可以发现 $min$ 函数中的第一项就是 $L^{CPI}$，第二项对 $r_t(\theta)$ 进行裁剪，超出 $[1-\epsilon,1+\epsilon]$ 的部分直接抹去，最后对两项取最小值，确保 $L^{CLIP}$ 取得结果是 $L^{CPI}$ 的下界。</p>
+<p><strong>注意，不是什么时候都将 $r_t$ 的值限制在  $[1-\epsilon,1+\epsilon]$，只有当目标函数获得提升时，我们将会对 r 进行限制；当目标函数变差时，我们不会对 r 进行处理。</strong></p>
+<p>至于 $r_t$ 什么时候被限制在 $1-\epsilon$，什么时候被限制在 $1 + \epsilon$，这取决于 $\hat{A}_t$的符号。</p>
+<ul>
+<li><strong>如果 $\hat{A}_t$ 大于零，则 $r_t$ 将限制在 $&lt; 1 + \epsilon$ 范围内，注意此时没有将 $r_t$ 限制在 $&gt; 1-\epsilon$ 的范围。</strong></li>
+<li><strong>如果 $\hat{A}_t$ 小于零，则 $r_t$ 将限制在 $&gt; 1 - \epsilon$ 范围内，注意此时没有将 $r_t$ 限制在 $&lt; 1+\epsilon$ 的范围。</strong></li>
+</ul>
+<p>具体如图 3-1 所示。</p>
+<p><img src="/2019/11/15/TRPO-PPO-论文笔记（下）/PPO_clip_explain.png" alt="PPO_clip_explain"></p>
+<p><center>图 3-1 对 r 裁剪的两种情况 </center><br>图 3-2 的结果也说明了  $L^{CLIP}$ 取得结果是 $L^{CPI}$ 的下界。图中的横轴表示沿着策略梯度方向插值的参数 $\theta$，横坐标为 $1$ 时是初始参数，往左是沿着梯度下降，往右是沿着梯度上升。可以发现沿着梯度上升时， $L^{CLIP}$ 永远在 $L^{CPI}$ 的下方。</p>
+<p><img src="/2019/11/15/TRPO-PPO-论文笔记（下）/L_clip.png" alt="L_clip"></p>
+<p><center>图 3-2 几种代理目标函数的取值 </center></p>
+<h2 id="4-自适应-KL-惩罚系数"><a href="#4-自适应-KL-惩罚系数" class="headerlink" title="4. 自适应 KL 惩罚系数"></a>4. 自适应 KL 惩罚系数</h2><p>除了第 3 节所说的截断代理目标函数的方法，本文还提出利用一个对 KL 的自适应惩罚项系数来构建代理目标，将新旧策略的 KL 散度值限定在一个目标 KL 散度值 $d_{targ}$ 附近。文中说这种方法的效果不如截断代理目标函数的方法好，不过可以作为补充和 baseline。</p>
+<p>实现过程如下：</p>
+<ul>
+<li><p>首先利用 SGD 对带有惩罚项的代理目标函数（等式 $\eqref{2.5}$ ）进行几个 epochs 的优化：</p>
+<script type="math/tex; mode=display">
+L^{KLPEN} = \hat{\mathbb{E}}_t \left[ \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)} \hat{A}_t - \beta KL[\pi_{\theta_{old}}(\cdot|s_t),\pi_\theta(\cdot|s_t)] \right] \tag{4.1} \label{4.1}</script></li>
+<li><p>计算当前新旧策略的 KL 散度值： $d = \hat{\mathbb{E}}_t KL \left[\pi_{\theta_{old}}(\cdot|s_t),\pi_\theta(\cdot|s_t)] \right]$</p>
+<ul>
+<li>如果 $d &lt; d_{targ}/1.5$，$\beta \leftarrow \beta /2$</li>
+<li>如果 $ d &gt; d_{targ}*1.5 $ ，$ \beta \leftarrow \beta*2 $</li>
+</ul>
+</li>
+</ul>
+<p>更新后的 $\beta$ 值将用于下一次更新。其中 $d_{targ}$ 是一个超参数，$1.5$ 和 $2$ 都是一个启发值，可以自己设定。文中说算法对这两个启发值不是很敏感。初始的 $\beta$ 也是一个超参数，但是不敏感，会随着算法持续自适应更新。</p>
+<h2 id="5-PPO-算法"><a href="#5-PPO-算法" class="headerlink" title="5. PPO 算法"></a>5. PPO 算法</h2><h3 id="5-1-代理目标函数改进"><a href="#5-1-代理目标函数改进" class="headerlink" title="5.1 代理目标函数改进"></a>5.1 代理目标函数改进</h3><p>算法中涉及对优势值 $\hat{A}_t$ 的估计，为了降低优势估计值的方差，可以使用“广义优势估计”（GAE）方法<a href="#ref2">[2]</a>：</p>
+<script type="math/tex; mode=display">
+\hat{A}_t^{GAE} = \sum_{l=0}^{\infty} (\gamma\lambda)^l \delta_{t+l} \tag{5.1}</script><p>当策略往前看 $T$ 步时（$T$ 小于 episode 的总数），上面公式变为：</p>
+<script type="math/tex; mode=display">
+\hat{A}^{GAE}_t = \delta_t + (\gamma \lambda) \delta_{t+1} + \cdots +(\gamma \lambda)^{T-t+1} \delta_{T-1} \tag{5.2} \label{5.2}</script><script type="math/tex; mode=display">
+where \,\,\,\, \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t) \tag{5.3}</script><p>当 $\lambda = 1$ 时，等式 $\eqref{5.2}$ 变为：</p>
+<script type="math/tex; mode=display">
+\hat{A}^{(T)}_t = -V(S_t)+r_t+\gamma_{t+1}+\cdots+\gamma^{T-t+1}r_{T-1}+\gamma^{T-t}V(S_T) \tag{5.4}</script><p>当 $\lambda = 0$ 时，等式 $\eqref{5.2}$ 变为</p>
+<script type="math/tex; mode=display">
+\hat{A}^{(1)}_t = -V(S_t)+r_t+\gamma V(S_{t+1}) \tag{5.5}</script><p>在论文 <a href="#ref2">[2]</a> 中证明 $\hat{A}^{GAE}_t$ 实质上是 $\hat{A}^{(1)}_t,\hat{A}^{(2)}_t,\cdots,\hat{A}^{(k)}_t$ 的指数加权和。</p>
+<p>如果策略网络和状态网络共用一套参数，代理目标函数还需要加上状态值函数的误差项。另外，为了鼓励智能体探索，可以给目标函数添加一个熵奖励项。最终，代理目标函数的形式为：</p>
+<script type="math/tex; mode=display">
+L_t^{CLIP+VF+S}(\theta) = \hat{\mathbb{E}}_t[L_t^{CLIP}(\theta) - c_1 L_t^{VF}(\theta) + c_2 S[\pi_\theta](s_t)] \tag{5.6}</script><p>其中 $c_1$，$c_2$ 是超参数，$S$ 表示熵奖励函数，$L_t^{VF}$ 表示状态值函数的误差项 $(V_\theta(s_t)-V_t^{targ})^2$ 。</p>
+<p>但是实际上论文中的实验并没有加上 $L_t^{VF}$ 和 $L_t^{S}$ 这两项，说明它们未必在任何时候都能取得效果。</p>
+<h3 id="5-2-PPO-伪代码"><a href="#5-2-PPO-伪代码" class="headerlink" title="5.2 PPO 伪代码"></a>5.2 PPO 伪代码</h3><p>PPO 方法的伪代码如下：</p>
+<p>首先用 $N$ 个智能体并行收集 $T$ 步的数据，构成大小为 $NT$ 的数据集，然后使用 minibatch SGD （或 Adam）方法优化代理目标函数。</p>
+<p><img src="/2019/11/15/TRPO-PPO-论文笔记（下）/PPO_peudo.png" alt="PPO_peudo"></p>
+<h2 id="6-工程设置和实验比较"><a href="#6-工程设置和实验比较" class="headerlink" title="6. 工程设置和实验比较"></a>6. 工程设置和实验比较</h2><p>网络结构和 TRPO 论文中的类似，两层全连接层，每层 64 个神经元，激活函数使用 tanh 非线性函数，输出为高斯分布策略的均值，标准差用另外一个独立的可变的参数来表示。另外，代理目标函数没有加上状态函数误差项和熵奖励项。</p>
+<p>工程设置没有其他特别注意的点，下面是实验比较中采用的一些方法。</p>
+<h3 id="6-1-不同代理目标函数的比较"><a href="#6-1-不同代理目标函数的比较" class="headerlink" title="6.1 不同代理目标函数的比较"></a>6.1 不同代理目标函数的比较</h3><ul>
+<li><p>使用 7 个环境，3 个随机种子，结果取最后 100 个 episode 总奖励和。然后归一化，定义随机策略的结果为 0，最好的结果为 1 。最后跑 21 次 取平均。</p>
+</li>
+<li><p>超参数取多几个，然后进行比较：</p>
+<p><img src="/2019/11/15/TRPO-PPO-论文笔记（下）/target_func_comp.png" alt="target_func_comp" style="zoom:90%;"></p>
+</li>
+</ul>
+<h3 id="6-2-连续动作空间的其他算法比较"><a href="#6-2-连续动作空间的其他算法比较" class="headerlink" title="6.2 连续动作空间的其他算法比较"></a>6.2 连续动作空间的其他算法比较</h3><p><img src="/2019/11/15/TRPO-PPO-论文笔记（下）/diff_method_comp.png" alt="diff_method_comp"></p>
+<h3 id="6-3-两个有意思的评价标准"><a href="#6-3-两个有意思的评价标准" class="headerlink" title="6.3 两个有意思的评价标准"></a>6.3 两个有意思的评价标准</h3><p>(1) <strong>average reward per episode over entire training period</strong> 可以用来评价学习的速度。</p>
+<p>(2) <strong>average reward per episode over last 100 episodes of training</strong> 可以用来评价最终学习的效果。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><span id="ref1">[1]</span> S. Kakade and J. Langford. “Approximately optimal approximate reinforcement learn- ing”. In: ICML. Vol. 2. 2002, pp. 267–274.</p>
+<p><span id="ref2">[2]</span> J. Schulman, P. Moritz, S. Levine, M. Jordan, and P. Abbeel. “High-dimensional contin- uous control using generalized advantage estimation”. In: arXiv preprint arXiv:1506.02438 (2015).</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/PG/" rel="tag"># PG</a>
+            
+              <a href="/tags/PPO/" rel="tag"># PPO</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/10/18/TRPO-PPO-论文笔记（上）/" rel="next" title="TRPO & PPO 论文笔记（上）">
+                  <i class="fa fa-chevron-left"></i> TRPO & PPO 论文笔记（上）
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/02/11/A3C论文笔记/" rel="prev" title="A3C论文笔记">
+                  A3C论文笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#二、-PPO：近端策略优化"><span class="nav-text">二、 PPO：近端策略优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-PPO-概述"><span class="nav-text">1. PPO 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-策略梯度"><span class="nav-text">2.1 策略梯度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-TRPO"><span class="nav-text">2.2 TRPO</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-截断代理目标函数"><span class="nav-text">3. 截断代理目标函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-自适应-KL-惩罚系数"><span class="nav-text">4. 自适应 KL 惩罚系数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-PPO-算法"><span class="nav-text">5. PPO 算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-代理目标函数改进"><span class="nav-text">5.1 代理目标函数改进</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-PPO-伪代码"><span class="nav-text">5.2 PPO 伪代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-工程设置和实验比较"><span class="nav-text">6. 工程设置和实验比较</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-不同代理目标函数的比较"><span class="nav-text">6.1 不同代理目标函数的比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-连续动作空间的其他算法比较"><span class="nav-text">6.2 连续动作空间的其他算法比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-两个有意思的评价标准"><span class="nav-text">6.3 两个有意思的评价标准</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

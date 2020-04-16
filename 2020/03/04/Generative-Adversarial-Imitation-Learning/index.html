@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="1. GAIL 概念介绍假如需要从一个示例的专家数据中学习出一个策略，而且学习过程中没有专家的指导和信号预测。一种方是行为克隆方法，主要是通过监督学习模型从专家数据中学习出策略，但是这种方法需要大量数据。另一种方法是通过逆强化学习从专家数据中学习代价函数，该代价函数从专家的角度而言是唯一最优的，但是这种方法不直接而且比较慢，通常需要强化学习在内循环。为什么不可以直接从专家数据中学习出一个策略呢？">
+<meta name="keywords" content="强化学习,生成对抗,模仿学习,学徒学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Generative Adversarial Imitation Learning">
+<meta property="og:url" content="http://yoursite.com/2020/03/04/Generative-Adversarial-Imitation-Learning/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="1. GAIL 概念介绍假如需要从一个示例的专家数据中学习出一个策略，而且学习过程中没有专家的指导和信号预测。一种方是行为克隆方法，主要是通过监督学习模型从专家数据中学习出策略，但是这种方法需要大量数据。另一种方法是通过逆强化学习从专家数据中学习代价函数，该代价函数从专家的角度而言是唯一最优的，但是这种方法不直接而且比较慢，通常需要强化学习在内循环。为什么不可以直接从专家数据中学习出一个策略呢？">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/03/04/Generative-Adversarial-Imitation-Learning/GAIL.png">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Generative Adversarial Imitation Learning">
+<meta name="twitter:description" content="1. GAIL 概念介绍假如需要从一个示例的专家数据中学习出一个策略，而且学习过程中没有专家的指导和信号预测。一种方是行为克隆方法，主要是通过监督学习模型从专家数据中学习出策略，但是这种方法需要大量数据。另一种方法是通过逆强化学习从专家数据中学习代价函数，该代价函数从专家的角度而言是唯一最优的，但是这种方法不直接而且比较慢，通常需要强化学习在内循环。为什么不可以直接从专家数据中学习出一个策略呢？">
+<meta name="twitter:image" content="http://yoursite.com/2020/03/04/Generative-Adversarial-Imitation-Learning/GAIL.png">
+  <link rel="canonical" href="http://yoursite.com/2020/03/04/Generative-Adversarial-Imitation-Learning/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Generative Adversarial Imitation Learning | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/04/Generative-Adversarial-Imitation-Learning/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Generative Adversarial Imitation Learning
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-03-04 17:44:52" itemprop="dateCreated datePublished" datetime="2020-03-04T17:44:52+08:00">2020-03-04</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/04/Generative-Adversarial-Imitation-Learning/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/04/Generative-Adversarial-Imitation-Learning/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-GAIL-概念介绍"><a href="#1-GAIL-概念介绍" class="headerlink" title="1. GAIL 概念介绍"></a>1. GAIL 概念介绍</h2><p>假如需要从一个示例的专家数据中学习出一个策略，而且学习过程中没有专家的指导和信号预测。一种方是行为克隆方法，主要是通过监督学习模型从专家数据中学习出策略，但是这种方法需要大量数据。另一种方法是通过逆强化学习从专家数据中学习代价函数，该代价函数从专家的角度而言是唯一最优的，但是这种方法不直接而且比较慢，通常需要强化学习在内循环。为什么不可以直接从专家数据中学习出一个策略呢？</p>
+<p>本文提出一种可以直接从专家数据中学习出策略的算法，称为 GAIL（Generative Adversarial Imitation Learning），生成对抗模仿学习。GAIL 实际上也运用了 GAN 的训练方法，来拟合状态数据和动作数据的分布，从而定义专家的行为。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><h3 id="2-1-符号定义"><a href="#2-1-符号定义" class="headerlink" title="2.1 符号定义"></a>2.1 符号定义</h3><p>$\overline{\mathbb{R}}$ 定义为扩展的实数集：$\mathbb{R} \cup \{\infty\}$ 。</p>
+<p>定义状态空间为 $\mathcal{S}$，动作空间为 $\mathcal{A}$，$\Pi$ 表示在状态空间 $\mathcal{S} $ 执行动作 $\mathcal{A} $ 的平稳随机策略集合。</p>
+<p>状态转移概率定义为 $P(s’|s,a)$ 。</p>
+<p>起始状态的分布写为 $p_0(s)$ 。</p>
+<p>对于给定的策略 $\pi \in \Pi$，定义性能期望为：$\mathbb{E}_\pi[c(s,a)] \triangleq \mathbb{E}[\sum_{t=0}^\infty \gamma^t c(s_t,a_t)]$ 。</p>
+<p>对于采样的轨迹样本，性能期望的符号表示为 $\hat{\mathbb{E}_\tau}$，专家策略表示为 $\pi_E$ 。</p>
+<h3 id="2-2-逆强化学习"><a href="#2-2-逆强化学习" class="headerlink" title="2.2 逆强化学习"></a>2.2 逆强化学习</h3><p>本文后面采用了 maximum <u>causal entropy</u> (因果熵) IRL <a href="#ref1">[1,2]</a> ，它构造了一个优化问题：</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_{c \in \mathcal{C}} \left( \min_{\pi \in \Pi} - H(\pi) + \mathbb{E}_\pi[c(s,a)] \right) - \mathbb{E}_{\pi_E}[c(s,a)]
+\tag{1}</script><p>其中 $c$ 表示 cost function，$\mathcal{C}$ 表示函数族，$H(\pi) \triangleq \mathbb{E}_\pi[-\log \pi(a|s)]$ 表示 $\gamma$ 折扣因果熵。</p>
+<p>$\pi_E$ 实际上只是执行策略 $\pi_E$ 得到的一系列采样轨迹。因此 $\mathbb{E}_{\pi_E}$ 需要从这些样本中估计期望值。</p>
+<p>最大化因果熵逆强化学习方法的目的是找到一个代价函数 $c \in \mathcal{C}$，使得对于专家策略，代价最低，而对于其他策略，代价很高。找到代价函数 $c$ 之后，从而通过强化学习过程估计专家策略：</p>
+<script type="math/tex; mode=display">
+RL(c) = \mathop{\arg \min}_{\pi \in \Pi} -H(\pi)+\mathbb{E}_\pi[c(s,a)]
+\tag{2}</script><h2 id="3-算法推导"><a href="#3-算法推导" class="headerlink" title="3. 算法推导"></a>3. 算法推导</h2><p>首先研究 IRL 的表达能力。IRL 建立在庞大的代价函数族 $\mathbb{R}^{\mathcal{S} \times \mathcal{A}} = \{c:\mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}\}$ 上。由于拥有庞大的函数族，，对于固定的数据集很容易造成过拟合。因此本文引入一个凸的正则项 $\psi: \mathbb{R}^{\mathcal{S} \times \mathcal{A}} \rightarrow \overline{\mathbb{R}}$ 。加入正则项的最大因果熵 IRL 目标可以表示为：</p>
+<script type="math/tex; mode=display">
+IRL_\psi(\pi_E) = \mathop{\arg \max}_{c \in \mathbb{R}^{\mathcal{S} \times \mathcal{A}}}-\psi(c) + \left( \min_{\pi \in \Pi} - H(\pi) + \mathbb{E}_\pi[c(s,a)] \right) - \mathbb{E}_{\pi_E}[c(s,a)]
+\tag{3}</script><p>令 $\tilde{c} \in IRL_\psi(\pi_E)$ ，现在我们感兴趣的是由 $RL(\tilde{c})$ 得出的策略的性能。</p>
+<p>为了评估 $RL(\tilde{c})$，将原先优化问题转化为凸问题。首先定义策略 $\pi \in \Pi$ 的占有率（occupancy measure） $\rho_\pi: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ 为 $\rho_\pi(s,a) = \pi(a|s) \sum_{t=0}^\infty \gamma^t P(s_t=s|\pi)$ 。</p>
+<p>占有率可以理解为状态动作对在策略 $\pi$ 执行下的概率分布。此时对于 $c(s,a)$，期望值的计算可以写为：$\mathbb{E}_\pi[c(s,a)]=\sum_{s,a} \rho_\pi(s,a)c(s,a)$ 。论文 <a href="#ref3">[3]</a> 中证明了占有率集合 $\mathcal{D} \triangleq \{\rho_\pi: \pi \in \Pi \}$ ，可以写成仿射约束的可行集：$\mathcal{D}=\left\{ \rho:\rho \ge 0 \;\; and \;\; \sum_a \rho(s,a)=\rho_0(s) + \gamma \sum_{s’,a} P(s’|s,a)\rho(s’,a) \;\; \forall s \in \mathcal{S} \right\}$ 。（PS：仿射变换就是线性变化加上一个平移）注意，$\Pi$ 和 $\mathcal{D}$ 是一一映射的。</p>
+<ul>
+<li><p><strong>命题 3.1：</strong>如果 $\rho \in \mathcal{D}$，那么 $\rho$ 是策略 $\pi_\rho \triangleq \rho(s,a)/\sum_{a’} \rho(s,a’)$ 的占有率，$\pi_{\rho}$ 也是唯一的占有率为 $\rho$ 的策略。</p>
+</li>
+<li><p><strong>命题 3.2：</strong>$RL \circ IRL_\psi(\pi_E) = \arg \min_{\pi \in \Pi} -H(\pi)+\psi^*(\rho_\pi-\rho_{\pi_E})$ </p>
+</li>
+</ul>
+<p>为了评估 $RL(\tilde{c})$，需要一个数学工具：共扼函数。对于函数 $f:\mathbb{R}^{\mathcal{S} \times \mathcal{A}} \rightarrow \overline{\mathbb{R}}$，它的共扼函数 $f^<em>:\mathbb{R}^{\mathcal{S} \times \mathcal{A}} \rightarrow \overline{\mathbb{R}}$ 表示为$f^</em>(x)=\sup_{y\in \mathbb{R}^{\mathcal{S} \times \mathcal{A}}} x^Ty -f(y) $ 。共扼函数一定是凸函数。</p>
+<p>命题 3.1 出自论文 <a href="#ref4">[4]</a> 。命题 3.2 在本文的附录 A 有证明。</p>
+<p>命题 3.2 告诉我们带有 $\psi$ 正则项的 IRL 在含蓄地寻找一个策略，其占有率接近专家策略，通过共扼函数 $\psi^*$ 来度量。本文接下来将会阐述采用不同的 $\psi$ 设置，将会导致不同的模仿学习方法。</p>
+<h3 id="3-1-constant-function-psi"><a href="#3-1-constant-function-psi" class="headerlink" title="3.1 constant function $\psi$"></a>3.1 constant function $\psi$</h3><p>最特殊的情况是 $\psi$ 是一个常数（也就是不采用正则项）。</p>
+<p><strong>引理 3.1：</strong>令 $\bar{H}(\rho) = -\sum_{s,a}\rho(s,a) \log \left( \rho(s,a)/\sum_{a’}\rho(s,a’) \right)$ 。 那么 $\bar{H}$ 是严格的凹函数，并且对于所有的 $\pi \in \Pi$ 和 $\rho \in \mathcal{D}$，都有 $H(\pi)=\bar{H}(\rho_\pi)$ 和 $\bar{H}(\rho)=H(\pi_\rho)$ 。</p>
+<p>引理 1 在本文的附录 A 有证明。引理 3.1 告诉我们可以随意在策略和占有率两者间切换，因此得到下面引理。</p>
+<p><strong>引理 3.2：</strong>如果令 $L(\pi,c)=-H(\pi)+\mathbb{E}_\pi[c(s,a)]$，令 $\bar{L}(\rho,c)=-\bar{H}(\rho)+\sum_{s,a}\rho(s,a)c(s,a)$ 。那么对于所有的代价函数 $c$，都有 $L(\pi,c) = \bar{L}(\rho_\pi,c) \;\; \forall \pi \in \Pi$ ，并且都有 $\bar{L}(\rho,c)=L(\pi_\rho,c) \;\; \forall \rho \in \mathcal{D}$ 。</p>
+<p>根据上面两条引理，可以得出以下推论：</p>
+<p><strong>推论 3.2.1</strong>：​如果 $\psi$ 是一个常数，并且 $\tilde{c} \in IRL_\psi(\pi_E)$，$\tilde{\pi} \in RL(\tilde{c})$，那么 $\rho_{\tilde{\pi}}=\rho_{\pi_E}$ 。</p>
+<p>以上推论告诉我们，如果不采用正则项，那么 $RL(\tilde{c})$ 得到的策略将完全与专家策略 $\pi_E$ 匹配。 </p>
+<p>推论 3.2.1 证明过程如下（涉及到最优化中的原问题和对偶问题）：</p>
+<hr>
+<p>定义 $\bar{L}(\rho,c) = -\bar{H}(\rho)+\sum_{s,a}c(s,a)(\rho(s,a)-\rho_E(s,a))$ 。给定 $\psi$ 是常数。</p>
+<p>根据引理 3.2，可得：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\tilde{c} & \in IRL_\psi (\pi_E) = \mathop{\arg \max}_{c \in \mathbb{R}^{\mathcal{S}\times \mathcal{A}}} \min_{\pi \in \Pi} -H(\pi) + \mathbb{E}_\pi[c(s,a)] - \mathbb{E}_{\pi_E}[c(s,a)] + const \\
+& = \mathop{\arg \max}_{c \in \mathbb{R}^{\mathcal{S}\times \mathcal{A}}} \min_{\rho \in \mathcal{D}} -\bar{H}(\rho) + \sum_{s,a} \rho(s,a)c(s,a) - \sum_{s,a} \rho_E(s,a)c(s,a) = \mathop{\arg \max}_{c \in \mathbb{R}^{\mathcal{S}\times \mathcal{A}}} \min_{\rho \in \mathcal{D}} \bar{L}(\rho,c)
+\end{aligned}
+\tag{4}
+\label{4}</script><p>以上问题的对偶问题如下：</p>
+<script type="math/tex; mode=display">
+\mathop{minimize}_{\rho \in \mathcal{D}} -\bar{H}(\rho) \;\; subject \;\; to \;\;
+\rho(s,a) = \rho_E(s,a) \;\; \forall s \in \mathcal{S}, a\in \mathcal{A}
+\tag{5}
+\label{5}</script><p>因此 $\tilde{c}$ 是等式 $\eqref{5}$ 的对偶最优解。</p>
+<p>引理 3.1 保证了 $-\bar{H}$ 是严格的凸函数，因此最优解是唯一的。原始问题的最优解可以通过对偶问题的最优解得到，即：</p>
+<script type="math/tex; mode=display">
+\tilde{\rho} = \mathop{\arg \min}_{\rho \in \mathcal{D}} \bar{L}(\rho, \tilde{c}) = \mathop{\arg \min}_{\rho \in \mathcal{D}} -\bar{H}(\rho) + \sum_{s,a} \tilde{c}(s,a)\rho(s,a)=\rho_E
+\tag{6}</script><p>如果 $\tilde{\pi} \in RL(\tilde{c})$，根据引理 3.2，$\tilde{\pi}$ 的占有率 $\rho_{\tilde{\pi}} = \tilde{\rho} = \rho_E$ 。</p>
+<hr>
+<p>从推论的结果，本文得出以下两条结论：</p>
+<ul>
+<li>IRL 是<strong><u>占有率匹配</u></strong>问题的一个对偶形式。</li>
+<li>从占有率匹配对偶问题中导出的最优策略就是原始问题的最优策略。</li>
+</ul>
+<h3 id="3-2-occupancy-measure-matching"><a href="#3-2-occupancy-measure-matching" class="headerlink" title="3.2 occupancy measure matching"></a>3.2 occupancy measure matching</h3><p>在上一节中，阐述了如果正则项是常数，则原问题相当于与专家数据进行状态动作数据占有率匹配的问题，也就是说占有率越与专家数据的占有率匹配，则推导出的策略越接近专家策略。但在实际运用中，占有率匹配算法实际是不可行的。因为专家轨迹数据的分布仅仅是一个有限样本的集合，在大规模环境中，很多数据不在专家数据集中，因此导致这些数据的占有率在专家数据集中为零。这回导致让学习出策略避开专家数据集中没有的状态动作对。</p>
+<p>另外还有一个问题，占有率匹配的约束条件数量与定义域 $\mathcal{S} \times \mathcal{A}$ 的大小相同，这就导致在函数逼近的参数优化过程中产生大量的运算。</p>
+<p>为了在大规模环境中运用模仿学习算法，松弛公式 $\eqref{5}$ 的形式，写成：</p>
+<script type="math/tex; mode=display">
+\mathop{minimize}_\pi \; d_\psi(\rho_\pi,\rho_E) - H(\pi)
+\tag{7}
+\label{7}</script><p>其中 $d_\psi(\rho_\pi,\rho_E)$ 定义为 $\rho_\pi$ 和 $\rho_E$ 两个占有率的正则项，即 $d_\psi(\rho_\pi,\rho_E) \triangleq \psi^*(\rho_\pi-\rho_E)$ ，与命题 3.2 的形式类似。</p>
+<h4 id="3-2-1-apprenticeship-learning"><a href="#3-2-1-apprenticeship-learning" class="headerlink" title="3.2.1 apprenticeship learning"></a>3.2.1 apprenticeship learning</h4><p>学徒学习（apprenticeship learning）算法也是公式 $\eqref{7}$ 的一种特殊形式。令代价函数集合 $\mathcal{C} \subset \mathbb{R}^{\mathcal{S} \times \mathcal{A}}$，学徒学习算法的目标为：</p>
+<script type="math/tex; mode=display">
+\mathop{minimize}_{\pi} \; \max_{c \in \mathcal{C}} \mathbb{E_\pi}[c(s,a)]-\mathbb{E}_{\pi_E}[c(s,a)]
+\tag{8}
+\label{8}</script><p>接下来说明公式 $\eqref{8}$ 为什么属于是公式 $\eqref{7}$ 的形式。</p>
+<p>定义一个指示函数 $\delta_\mathcal{C}: \mathbb{R}^{\mathcal{S}\times\mathcal{A}} \rightarrow \overline{\mathbb{R}}$，表达式为：</p>
+<script type="math/tex; mode=display">
+\delta_\mathcal{C} = 
+\left\{ 
+\begin{aligned}
+&0 &c \in \mathcal{C} \\
+&+\infty  &otherwise
+\end{aligned}
+\right.</script><p>则公式 $\eqref{8}$ 可以写为如下形式：</p>
+<script type="math/tex; mode=display">
+\max_{c \in \mathcal{C}} \mathbb{E_\pi}[c(s,a)]-\mathbb{E}_{\pi_E}[c(s,a)] = \max_{c \in \mathbb{R}^{\mathcal{S}\times \mathcal{A}}} -\delta_\mathcal{C} + \sum_{s,a}(\rho_\pi(s,a)-\rho_{\pi_E}(s,a))c(s,a) = \delta^*(\rho_\pi - \rho_{\pi_E})
+\tag{9}</script><p>因此学徒学习算法实际上采用的代价函数正则项为 $\psi = \delta_\mathcal{C}$，也就是将代价函数的范围限制在集合 $\mathcal{C}$ 中。带有熵正则项的学徒学习算法的目标可以写为：</p>
+<script type="math/tex; mode=display">
+\mathop{minimize}_{\pi} \; -H(\pi) + \max_{c \in \mathcal{C}} \mathbb{E_\pi}[c(s,a)]-\mathbb{E}_{\pi_E}[c(s,a)]
+\tag{10}
+\label{10}</script><p>对于集合 $\mathcal{C}$ 的形式，经典的学徒学习算法主要是将 $\mathcal{C}$ 限制子一个凸集中，该集合由一系列基函数进行线性组合得来：$f(s,a)=[f_1(s,a),\dots,f_d(s,a)]$。文中给出两种凸集：$\mathcal{C}_{linear}$ <a href="#ref5">[5]</a> 和 $\mathcal{C}_{convex}$<a href="#ref4">[4]</a> 。</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\mathcal{C}_{linear} &= \{ \sum_i w_i f_i : \| w \|_2 \le 1 \} \\
+\mathcal{C}_{convex} &= \{ \sum_i w_i f_i : \sum_iw_i = 1, w_i \ge 0 \;\;\forall_i \}
+\end{aligned}
+\tag{11}
+\label{11}</script><h3 id="3-2-2-学徒学习的优点"><a href="#3-2-2-学徒学习的优点" class="headerlink" title="3.2.2 学徒学习的优点"></a>3.2.2 学徒学习的优点</h3><p>学徒学习采用了限制的代价函数范围 $\mathcal{C}$，因此能够将这样的 $\mathcal{C}$ 与策略函数逼近结合起来，运用到大规模的状态空间和动作空间中。比如论文 <a href="#ref6">[6]</a> 就将策略梯度公式和学徒学习的目标公式 $\eqref{8}$ 结合起来：</p>
+<script type="math/tex; mode=display">
+\nabla_\theta \max_{c\in \mathcal{C}} \mathbb{E}_{\pi_\theta}[c(s,a)]-\mathbb{E}_{\pi_E}[c(s,a)] = \nabla_\theta \mathbb{E}_{\pi_\theta}[c^*(s,a)] = \mathbb{E}_{\pi_\theta}[\nabla_\theta \log \pi_\theta(a|s)Q_{c^*}(s,a)] \\
+\mathscr{where} \;\; c^* = \mathop{\arg \max}_{c \in \mathcal{C}} \mathbb{E}_{\pi_\theta}[c(s,a)] - \mathbb{E}_{\pi_E}[c(s,a)], \;\; Q_{c^*}(\bar{s},\bar{a})=\mathbb{E}_{\pi_\theta}[c^*(\bar{s},\bar{a})|s_0=\bar{s},a_0=\bar{a}]
+\tag{12}</script><h3 id="3-2-3-学徒学习的缺点"><a href="#3-2-3-学徒学习的缺点" class="headerlink" title="3.2.3 学徒学习的缺点"></a>3.2.3 学徒学习的缺点</h3><p>如果对 $\mathcal{C}$ 的限制过于严格，很有可能找不到和专家策略一样优秀的策略。因此对于基函数 $f_1,\dots,f_d$ 的设计需要十分精致。</p>
+<h2 id="4-GAIL-算法"><a href="#4-GAIL-算法" class="headerlink" title="4. GAIL 算法"></a>4. GAIL 算法</h2><p>正如前面所说的，如果正则项 $\psi$ 是常数，则对应的模仿学习算法可以与专家策略的占有率完全匹配，但是对于大规模的环境并不适用；如果正则项 $\psi$ 是线性函数类，如公式 $\eqref{11} $ ，则对应的模仿学习算法也许不能与专家策略的占有率完全匹配，但是可以适用于大规模的环境。</p>
+<p>本文将提出新的正则器，结合以上两种正则器的优点：</p>
+<script type="math/tex; mode=display">
+\psi_{GA}(c) \triangleq \left\{ 
+\begin{aligned}
+&\mathbb{E}_{\pi_E}[g(c(s,a))] &if \;\; c < 0 \\
+&+\infty &otherwise
+\end{aligned},
+\right.
+ \;\; where \;\; g(x) = \left\{
+\begin{aligned}
+&-x-\log(1-e^x)  &if \;\; x < 0 \\
+&+\infty &otherwise
+\end{aligned}
+\right.
+\tag{13}
+\label{13}</script><p>注意到以上的代价函数的上界为零。公式 $\eqref{13} $ 的意义在于，代价函数对于专家轨迹的值如果是一个小的负数，则正则器给予一个很低的惩罚；如果是一个很大的值（即为零），则正则器给予一个很高的惩罚。</p>
+<p>之所以采用这样的正则器，是因为从公式 $ \eqref{13}$ 中可以得到以下推论（证明过程在文中的附录）：</p>
+<script type="math/tex; mode=display">
+\psi^*_{GA}(\rho_\pi-\rho_{\pi_E}) = \max_{D \in (0,1)^{\mathcal{S}\times \mathcal{A}}} \mathbb{E}_\pi[\log(D(s,a))] + \mathbb{E}_{\pi_E}[\log(1-D(s,a))]
+\tag{14}</script><p>其中判别器类别的范围是 $D:\mathcal{S \times \mathcal{A}} \rightarrow (0,1)$。现在我们的优化目标是：</p>
+<script type="math/tex; mode=display">
+\mathop{minimize}_\pi \psi^*_{GA}(\rho_\pi - \rho_{\pi_E}) - \lambda H(\pi)
+\tag{15}
+\label{15}</script><p>公式 $\eqref{15}$ 将模仿学习算法和生成对抗网络建立了连接，$D$ 就是生成对抗模型中的判别器。$D$ 的任务就是负责识别生成器 $G$ 生成的数据分布和真实的数据分布的差异，当 $D$ 不再能辨别出差异时，$G$ 的任务就完成了。在公式 $\eqref{15}$ 中，$\rho_\pi$ 就相当于 $G$ 生成的数据分布，而 $\rho_E$ 就相当于真实数据分布。</p>
+<p>首先引入 $\pi$ 和 $D$ 的函数逼近形式。定义一个策略网络 $\pi_\theta$ 和判别器网络 $D_w:\mathcal{S}\times \mathcal{A} \rightarrow (0,1)$。然后交替运用 Adam优化 $w$ 和运用TRPO 优化 $\theta$ 。</p>
+<p><img src="/2020/03/04/Generative-Adversarial-Imitation-Learning/GAIL.png" alt="GAIL" style="zoom: 80%;"></p>
+<p>伪代码中对熵的求导如下：</p>
+<script type="math/tex; mode=display">
+\nabla_\theta H(\pi_\theta) = \nabla_\theta \mathbb{E}_{\pi_\theta}[-\log \pi_\theta(a|s)] = \mathbb{E}_{\pi_\theta}[\nabla_\theta \log \pi_\theta(a|s) Q_{\log}(s,a)], \\
+where \;\; Q_{\log}(\bar{s},\bar{a}) = \mathbb{E}_{\pi_\theta}[-\log \pi_\theta(a|s) | s_0=\bar{s},a_0=\bar{a}]
+\tag{16}</script><h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><span id="ref1">[1]</span> B. D. Ziebart, A. Maas, J. A. Bagnell, and A. K. Dey. Maximum entropy inverse reinforcement learning. In AAAI, AAAI’08, 2008.</p>
+<p><span id="ref2">[2]</span> B. D. Ziebart, J. A. Bagnell, and A. K. Dey. Modeling interaction via the principle of maximum causal entropy. In ICML, pages 1255–1262, 2010.</p>
+<p><span id="ref3">[3]</span> M. L. Puterman. Markov decision processes: discrete stochastic dynamic programming. John Wiley &amp; Sons, 2014.</p>
+<p><span id="ref4">[4]</span> U. Syed, M. Bowling, and R. E. Schapire. Apprenticeship learning using linear programming. In Proceedings ofthe 25th International Conference on Machine Learning, pages 1032–1039, 2008.</p>
+<p><span id="ref5">[5]</span> P. Abbeel and A. Y. Ng. Apprenticeship learning via inverse reinforcement learning. In Proceedings ofthe 21st International Conference on Machine Learning, 2004.</p>
+<p><span id="ref6">[6]</span> J. Ho, J. K. Gupta, and S. Ermon. Model-free imitation learning with policy optimization. In Proceedings ofthe 33rd International Conference on Machine Learning, 2016.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/生成对抗/" rel="tag"># 生成对抗</a>
+            
+              <a href="/tags/模仿学习/" rel="tag"># 模仿学习</a>
+            
+              <a href="/tags/学徒学习/" rel="tag"># 学徒学习</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/02/29/Hindsight-Experience-Replay/" rel="next" title="Hindsight Experience Replay">
+                  <i class="fa fa-chevron-left"></i> Hindsight Experience Replay
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/03/08/Soft-actor-critic/" rel="prev" title="Soft actor-critic">
+                  Soft actor-critic <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-GAIL-概念介绍"><span class="nav-text">1. GAIL 概念介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-符号定义"><span class="nav-text">2.1 符号定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-逆强化学习"><span class="nav-text">2.2 逆强化学习</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法推导"><span class="nav-text">3. 算法推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-constant-function-psi"><span class="nav-text">3.1 constant function $\psi$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-occupancy-measure-matching"><span class="nav-text">3.2 occupancy measure matching</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-apprenticeship-learning"><span class="nav-text">3.2.1 apprenticeship learning</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-学徒学习的优点"><span class="nav-text">3.2.2 学徒学习的优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-学徒学习的缺点"><span class="nav-text">3.2.3 学徒学习的缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-GAIL-算法"><span class="nav-text">4. GAIL 算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-text">参考文献</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

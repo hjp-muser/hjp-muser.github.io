@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Nachum, O., Norouzi, M., Xu, K., &amp;amp; Schuurmans, D. (2017). Bridging the gap between value and policy based reinforcement learning. Advances in Neural Information Processing Systems, 2017-Decem(Nips">
+<meta name="keywords" content="Q-learning,RL,AC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Path Consistency Learning (PCL)">
+<meta property="og:url" content="http://yoursite.com/2020/03/27/Path Consistency Learning (PCL)/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="Nachum, O., Norouzi, M., Xu, K., &amp;amp; Schuurmans, D. (2017). Bridging the gap between value and policy based reinforcement learning. Advances in Neural Information Processing Systems, 2017-Decem(Nips">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/03/27/Path%20Consistency%20Learning%20(PCL)/PCL.PNG">
+<meta property="og:updated_time" content="2020-04-16T03:45:17.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Path Consistency Learning (PCL)">
+<meta name="twitter:description" content="Nachum, O., Norouzi, M., Xu, K., &amp;amp; Schuurmans, D. (2017). Bridging the gap between value and policy based reinforcement learning. Advances in Neural Information Processing Systems, 2017-Decem(Nips">
+<meta name="twitter:image" content="http://yoursite.com/2020/03/27/Path%20Consistency%20Learning%20(PCL)/PCL.PNG">
+  <link rel="canonical" href="http://yoursite.com/2020/03/27/Path Consistency Learning (PCL)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Path Consistency Learning (PCL) | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/27/Path Consistency Learning (PCL)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Path Consistency Learning (PCL)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-03-27 11:49:28" itemprop="dateCreated datePublished" datetime="2020-03-27T11:49:28+08:00">2020-03-27</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/27/Path Consistency Learning (PCL)/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/27/Path Consistency Learning (PCL)/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Nachum, O., Norouzi, M., Xu, K., &amp; Schuurmans, D. (2017). Bridging the gap between value and policy based reinforcement learning. Advances in Neural Information Processing Systems, 2017-Decem(Nips), 2776–2786.</p>
+<h2 id="1-论文概述"><a href="#1-论文概述" class="headerlink" title="1. 论文概述"></a>1. 论文概述</h2><p>本文基于 softmax temporal value consistency 和熵正则化下的策略最优性，建立一个新的强化学习中值和策略的联系。具体指的是，本文展示了 softmax consistent action values 对应于最优熵正则化策略概率的推论。根据这个推论，本文提出了一个新的强化学习算法，Path Consistency Learning  (PCL)，旨在于最小化动作样本轨迹的 soft consistency error，且无论动作轨迹是 on-policy 还是 off-policy 产生。</p>
+<p>基于策略梯度的方法主要问题是样本效率，因为策略梯度是从 rollout 中估计的，。尽管可以使用一些几何上的方法，比如 Natural gradient，Relative entropy policy，Trust region 等方法，但方差控制问题依然很大。AC 一类方法可以通过 critic 代替 rollout，牺牲一些偏差来降低方差，但即便是这样，因为很多 AC 方法采用的是 on-policy，依然存在样本效率低的问题。另外基于值的方法，比如 Q-learning 算法，可以从环境采样的动作轨迹进行学习，这一类 off-policy 方法的样本效率比 on-policy 要高。但是这类算法的主要问题是不能和估计函数稳定地交互，调节超参数比较困难。</p>
+<p>理想上，我们想将 on-policy 的无偏性和稳定性与 off-policy 的样本高效性结合起来。这个思路造就了一系列 off-policy AC 方法，比如 Q-Prop，DDPG，A3C 等方法。尽管它们相对于 on-policy AC 方法有所提高，但是他们仍旧没有解决在函数逼近下与 off-policy 学习相关的理论困难。</p>
+<p>本文探索了熵正则化框架下策略优化和 softmax value consistency 的关系，本文称为 path consistency，路径一致性。利用这个观察结论，本文设计了一款性能稳定的 off-policy AC 学习方法，并说明如何将 actor 和 critic 统一在一个模型中，而不是用两个独立的模型表示。</p>
+<a id="more"></a>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>为了便于推导，本文对状态转移进行一些限定，假设状态转移函数是确定的，不是随机的。每步的奖励和下个状态可以分别表示为 $r_t = r(s_t,a_t)$ 和 $s_{t+1} = f(s_t,a_t)$ ；实际上对于随机的状态转移函数也成立，本文的附录 C 中有证明。以下公式的某些符号可能与之前论文中所用的符号不太一致。</p>
+<p>没有熵正则化的目标函数如下，也就是贝尔曼方程：</p>
+<script type="math/tex; mode=display">
+O_{ER}(s,\pi) = \sum_a \pi(a|s) [r(s,a) + \gamma O_{ER}(s',\pi)], \;\; where \;\; s' = f(s,a)
+\tag{1}
+\label{1}</script><p>$O_{ER}$ 就是期望折扣奖励值。</p>
+<p>定义 $V^\circ$ 是在状态 $s$ 下，所有策略最大的 $O_{ER}(s,\pi)$ 值，也就是：$V^\circ = \max_\pi O_{ER}(s,\pi)$。定义 $\pi^\circ$ 为满足 $V^\circ$ 的最优策略，即：$\pi^\circ = \arg\max_\pi O_{ER}(s,\pi)$ 。这个最优策略是关于动作的 one-hot 分布，因此可以得到：</p>
+<script type="math/tex; mode=display">
+V^\circ = O_{ER}(s,\pi^\circ) = \max_a (r(s,a) + \gamma V^\circ(s'))
+\tag{2}
+\label{2}</script><p>公式 $\eqref{2}$ 称为 hard-max Bellman temporal consistency。这里的 hard-max 说的是，下一步让目标函数最大化的动作选择只能选择一个，非黑即白。同样也可以写出更常见的 $Q^\circ$ 版本的公式：</p>
+<script type="math/tex; mode=display">
+Q^\circ(s,a) = r(s,a) + \gamma \max_{a'} Q^\circ(s',a')
+\tag{3}</script><p>以上说明了 hard-max 版本的 temporal consistency，接下来就到了 softmax 版本的诞生了。这和熵正则化的引入有关。考虑带有熵正则化的目标函数如下：</p>
+<script type="math/tex; mode=display">
+O_{ENT}(s,\pi) = O_{ER}(s,\pi) + \tau \mathbb{H}(s,\pi)
+\tag{4}
+\label{4}</script><p>其中 $\tau \ge 0$ 代表温度项，控制折扣熵正则化的程度。</p>
+<p>定义折扣熵的递归公式如下：</p>
+<script type="math/tex; mode=display">
+\mathbb{H}(s,\pi) = \sum_a \pi(a|s) [-\log \pi(a|s) + \gamma \mathbb{H}(s',\pi)]
+\tag{5}
+\label{5}</script><p>其中公式 $\eqref{5}$ 的第一项就是熵的定义，第二项是递归项，递归项主要是为了方便写成带熵正则化的贝尔曼方程。联合公式 $\eqref{1} $，$\eqref{4}$ 和 $\eqref{5}$ ，可以得到带熵正则话的贝尔曼方程如下：</p>
+<script type="math/tex; mode=display">
+O_{ENT}(s,\pi) = \sum_a \pi(a|s) [r(s,a) - \tau \log \pi(a|s) + \gamma O_{ENT}(s',\pi)]
+\tag{6}
+\label{6}</script><p>接下来令  $V^<em>(s) = \max_\pi O_{ENT}(s,\pi)$ 表示在状态 $s$ 下的最优值函数。同时令 $\pi^</em>(a|s)$ 为在状态 $s$ 下获取到最大 $O_{ENT}(s,\pi)$ 值的最优策略。因为引入了熵，此时最佳策略不再是关于动作的 one-hot 分布， 毕竟熵项趋于使用不确定性更大的策略。目标函数中引入熵使得策略变得更加不确定，这就是从 hard-max 转变为 soft-max 名称的由来。</p>
+<p>将 softmax 最优策略 $\pi^<em>(a|s)$ 用 softmax 最优值函数 $V^</em>(s)$ 表示如下：</p>
+<script type="math/tex; mode=display">
+\pi^*(a|s) \propto \exp \{ (r(s,a)+\gamma V^*(s'))/\tau \}
+\tag{7}
+\label{7}</script><p>公式 $\eqref{7}$ 是玻尔兹曼分布的形式，其完整的表达式为：</p>
+<script type="math/tex; mode=display">
+\pi^*(a|s) = \frac{\exp \{ (r(s,a)+\gamma V^*(s'))/\tau \}}{\sum_a \exp \{ (r(s,a)+\gamma V^*(s'))/\tau \}}
+\tag{8}
+\label{8}</script><p>分子称为配分函数。公式 $\eqref{8}$ 的验证可以参考 soft Q-learning 论文附录 A.1 中的公式 $(19)$，主要是通过构造 $\pi$ 和 $\pi^<em>$ 的负 KL 散度来证明只有 $\pi = \pi^</em>$ 时，目标函数取得最大值。</p>
+<p>将公式 $\eqref{8}$ 代入公式 $\eqref{6}$ ，可以得到 softmax 最优值函数的表达式：</p>
+<script type="math/tex; mode=display">
+V^*(s) = O_{ENT}(s,\pi^*) = \tau \log \sum_a \exp \{ (r(s,a) + \gamma V^*(s')) / \tau \}
+\tag{9}
+\label{9}</script><p>这里的 softmax 表示 log-sum-exp 形式，不是神经网络中的 softmax。soft Q-learning 论文中也称为 soft   最优状态值函数。当 $\tau \rightarrow 0$ 时，公式 $\eqref{9} $ 恢复为公式 $\eqref{2} $ 的形式。</p>
+<p>同样，可以写出 softmax 最优动作值函数的形式：</p>
+<script type="math/tex; mode=display">
+Q^*(s,a) = r(s,a) + \gamma V^*(s') = r(s,a) + \gamma \tau \log \sum_{a'} \exp(Q^*(s',a')/\tau)
+\tag{10}
+\label{10}</script><h2 id="3-算法推导"><a href="#3-算法推导" class="headerlink" title="3. 算法推导"></a>3. 算法推导</h2><p>接下来是本文的重点推导，根据以下的结论得出 PCL 算法。</p>
+<p>注意到公式 $\eqref{8}$ 可以写成：</p>
+<script type="math/tex; mode=display">
+\pi^*(a|s) = \frac{\exp \{ (r(s,a)+\gamma V^*(s'))/\tau \}}{\exp\{ V^*(s)/ \tau \}}
+\tag{11}
+\label{11}</script><p>对公式 $\eqref{11}$ 两边同时取对数，可以得到定理 1。</p>
+<p><strong>定理 1：</strong>对于 $\tau &gt; 0$，最大化 $O_{ENT}$ 的最优策略 $\pi^<em>$ 和最优值函数 $V^</em>(s) = \max_\pi O_{ENT}(s,\pi)$ 对于任意的 $s$ 和 $a$ $(s’=f(s,a))$ 都满足以下的时序一致性关系：</p>
+<script type="math/tex; mode=display">
+V^*(s) - \gamma V^*(s') = r(s,a) - \tau \log \pi^*(a|s)
+\tag{12}
+\label{12}</script><p>注意定理 1 适用于环境的状态转移是确定的情况，即 $s’$ 对于确定的 $s$ 和 $a$ 是唯一的。更通用的形式在本文的附录 C 中有证明。联合公式 $ \eqref{10}$ 和  公式 $\eqref{12}$，可以得到 $\pi^<em>$ 和 $Q^</em>$ 的关系：</p>
+<script type="math/tex; mode=display">
+\pi^*(a|s) = \exp\{ (Q^*(s,a) - V^*(s))/\tau \}
+\tag{13}
+\label{13}</script><p>定理 1 可以从 one-step 扩充到 multi-step，很容易得到以下 multi-step 时序一致性关系的引理：</p>
+<p><strong>引理 2：</strong>对于 $\tau &gt; 0$，$\pi^<em>$ 和 $V^</em>$ 对于任意的 $s_1$ 和动作序列 $a_1,\cdots,a_{t+1}$ $(s_{i+1} = f(s_i,a))$ 都满足以下的扩展时序一致性关系：</p>
+<script type="math/tex; mode=display">
+V^*(s_1) - \gamma^{t-1} V^*(s_t) = \sum_{i=1}^{t-1} \gamma^{i-1} [r(s_i,a_i) - \tau \log \pi^*(a_i|s_i)]
+\tag{14}
+\label{14}</script><p>定理 1 反过来也成立。</p>
+<p><strong>定理 3：</strong>如果一个策略 $\pi(a|s)$ 和状态值函数 $V(s)$ 对于所有的 $s$ 和 $a$ $(s’=f(s,a))$ 都满足公式 $\eqref{12}$，那么 $\pi = \pi^<em>$，$V=V^</em>$ 。</p>
+<p>定理 3 告诉我们，通过最小化公式 $\eqref{12}$ 和公式 $\eqref{14}$ 两边的差异，就可以学习参数化的策略和值函数估计。</p>
+<h2 id="4-具体算法"><a href="#4-具体算法" class="headerlink" title="4. 具体算法"></a>4. 具体算法</h2><p>将参数化策略表示为 $\pi_\theta$，参数化值函数表示为 $V_\phi$，根据公式 $\eqref{14}$，对于一个长度为 d 的子轨迹：$s_{i:i+d} \equiv (s_i,a_i,\cdots,s_{i+d-1},a_{i+d-1},s_{i+d})$，可以定义满足 soft 时序一致性的目标函数如下：</p>
+<script type="math/tex; mode=display">
+C(s_{i:i+d},\theta,\phi) = -V_\phi(s_i) + \gamma^d V_\phi(s_{i+d}) + \sum_{j=0}^{d-1} \gamma^j [r(s_{i+j},a_{i+j}) - \tau \log \pi_\theta(a_{i+j}|s_{i+j})]
+\tag{15}
+\label{15}</script><p>学习的目标是找到 $\pi_\theta$ 和 $V_\phi$ 使得 $C(s_{i:i+d},\theta,\phi)$ 尽可能接近 0 。</p>
+<p>这个算法就称为 Path Consistency Learning (PCL)，损失函数为：</p>
+<script type="math/tex; mode=display">
+O_{PCL}(\theta,\phi) = \sum_{s_{i:i+d} \in E} \frac{1}{2} C(s_{i:i+d},\theta,\phi)^2
+\tag{16}
+\label{16}</script><p>其中 $E$ 代表子轨迹集合。对公式 $\eqref{16}$ 进行求导可以得到：</p>
+<script type="math/tex; mode=display">
+\Delta \theta = \eta_\pi C(s_{i:i+d},\theta,\phi) \sum_{j=0}^{d-1} \gamma^j \nabla_\theta \log \pi_\theta (a_{i+j}|s_{i+j})
+\tag{17}
+\label{17}</script><script type="math/tex; mode=display">
+\Delta \phi = \eta_v C(s_{i:i+d},\theta,\phi) \left( \nabla_\phi V_\phi(s_i) - \gamma^d \nabla_\phi V_\phi(s_i+d) \right)
+\tag{18}
+\label{18}</script><p>其中 $\eta_\pi$ 和 $\eta_v$ 表示各自的学习率。由于一致性关系适用于任何轨迹，PCL 算法利用公式 $\eqref{17}$ 和公式 $\eqref{18}$ 既可以对 on-policy 采样的轨迹进行学习，也可以对从经验池采样的轨迹进行学习。</p>
+<p>最终 PCL 采用 on-policy 和 off-policy 结合，伪代码如下：</p>
+<p><img src="/2020/03/27/Path Consistency Learning (PCL)/PCL.PNG" alt="PCL" style="zoom:75%;"></p>
+<p>注意存入经验池的不是单独的状态和动作对，而是一段子轨迹 $s_{0:T} \sim \pi_\theta(s_{0:})$ 。另外每个轨迹加入经验池时都有自己的优先级，主要与奖励值有关，本文设计的子轨迹优先级表达式如下：</p>
+<script type="math/tex; mode=display">
+P(s_{0:T}) = 0.1/B + 0.9 \exp(\alpha \sum_{i=0}^{T-1} r(s_i,a_i)) / Z
+\tag{19}</script><p>其中 $B$ 表示经验池的大小，$Z$ 表示归一化因子。$\alpha$ 是可调节的超参数。</p>
+<h3 id="4-1-Unified-PCL"><a href="#4-1-Unified-PCL" class="headerlink" title="4.1 Unified PCL"></a>4.1 Unified PCL</h3><p>根据公式 $\eqref{9}$、$\eqref{10}$ 和 $\eqref{13}$，可以策略和值函数估计都用动作值函数估计 $Q_\rho$ 来表示：</p>
+<script type="math/tex; mode=display">
+V_\rho(s) = \tau \log \sum_a \exp \{ Q_\rho(s,a)/\tau \}
+\tag{20}</script><script type="math/tex; mode=display">
+\pi_\rho(a|s) = \exp\{ (Q_\rho(s,a) - V_\rho(s))/\tau \}
+\tag{21}</script><p>这样做的意义在于提出一种新型的 AC 框架，让 actor 和 critic 统一在一个模型中。对参数 $\rho$ 进行求导可以得到：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\Delta_\rho &= \eta_\pi C(s_{i:i+d},\rho) \sum_{j=0}^{d-1} \gamma^j \nabla_\rho \log \pi_\rho (a_{i+j}|s_{i+j})  \\
+&+ \eta_v C(s_{i:i+d},\rho) \left( \nabla_\rho V_\rho(s_i) - \gamma^d \nabla_\rho V_\rho(s_i+d) \right)
+\end{aligned}
+\tag{22}
+\label{22}</script><h3 id="4-2-PCL-和-AC、Q-learning-的联系"><a href="#4-2-PCL-和-AC、Q-learning-的联系" class="headerlink" title="4.2 PCL 和 AC、Q-learning 的联系"></a>4.2 PCL 和 AC、Q-learning 的联系</h3><p>对于 A2C (advantage actor critic) 框架，给定一个长度为 $d$ 的轨迹，优势函数可以表示为：</p>
+<script type="math/tex; mode=display">
+A(s_{i:i+d},\phi) = -V_\phi(s_i) + \gamma^d V_\phi(s_{i+d}) + \sum_{j=0}^{d-1} \gamma^j r(s_{i+j},a_{i+j})
+\tag{23}</script><p>策略网路和状态网络的参数梯度表达式为：</p>
+<script type="math/tex; mode=display">
+\Delta \theta = \eta_\pi \mathbb{E}_{s_{i:i+d}|\theta} [A(s_{i:i+d},\phi) \nabla_\theta \log \pi_\theta(a_i|s_i)]
+\tag{24}
+\label{24}</script><script type="math/tex; mode=display">
+\Delta \phi = \eta_v \mathbb{E}_{s_{i:i+d}|\theta} [A(s_{i:i+d},\phi) \nabla_\phi V_\phi(s_i)]
+\tag{25}
+\label{25}</script><p>其中 $\mathbb{E}_{s_{i:i+d}|\theta}$ 表示从当前策略 $\pi_\theta$ 采样的样本期望。</p>
+<p>注意到公式 $\eqref{24}$ 、$\eqref{25}$ 和公式 $\eqref{17}$、$\eqref{18}$ 十分相似。实际上，当令 PCL 的参数 $\tau \rightarrow 0$ 时，PCL 就是一个 A2C 算法的变体。因此，PCL 算法可以视为 A2C 算法的一般化。并且 PCL 的使用范围更广，从 A2C 的 on-policy 扩充为 off-policy。另外需要注意的是，在 A2C 算法中，$V_\phi$ 的训练目标是 $V^{\pi_\theta}$，而在 PCL 中，不需要重新计算 $V^{\pi_\theta}$ 。并且，PCL 可以将 actor 和 critic 统一为一个模型，不再需要单独的 critic 模型。</p>
+<p>另外如果令 $d=1$，PCL 其实变成了 soft Q-learning 。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Q-learning/" rel="tag"># Q-learning</a>
+            
+              <a href="/tags/RL/" rel="tag"># RL</a>
+            
+              <a href="/tags/AC/" rel="tag"># AC</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/03/17/Soft Q-learning (SQL)/" rel="next" title="Soft Q-learning (SQL)">
+                  <i class="fa fa-chevron-left"></i> Soft Q-learning (SQL)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/04/04/Trust Region Path Consistency Learning (Trust-PCL)/" rel="prev" title="Trust Region Path Consistency Learning (Trust-PCL)">
+                  Trust Region Path Consistency Learning (Trust-PCL) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-论文概述"><span class="nav-text">1. 论文概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法推导"><span class="nav-text">3. 算法推导</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-具体算法"><span class="nav-text">4. 具体算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Unified-PCL"><span class="nav-text">4.1 Unified PCL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-PCL-和-AC、Q-learning-的联系"><span class="nav-text">4.2 PCL 和 AC、Q-learning 的联系</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

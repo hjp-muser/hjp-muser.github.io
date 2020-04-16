@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="1. A3C 概念A3C 大部分时候泛指的是一个轻型的深度强化学习框架，用于深度神经网络控制器的异步优化。完整名称是：Asynchronous Advantage Actor-Critic（A3C），就是将异步训练框架和 Advantage Actor-Critic 方法结合的产物。 过去很多观点认为简单的在线强化学习算法与神经网络的结合通常不稳定，因为在线强化学习连续观察的数据都是相互关联的，因">
+<meta name="keywords" content="强化学习,AC 框架">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A3C论文笔记">
+<meta property="og:url" content="http://yoursite.com/2020/02/11/A3C论文笔记/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="1. A3C 概念A3C 大部分时候泛指的是一个轻型的深度强化学习框架，用于深度神经网络控制器的异步优化。完整名称是：Asynchronous Advantage Actor-Critic（A3C），就是将异步训练框架和 Advantage Actor-Critic 方法结合的产物。 过去很多观点认为简单的在线强化学习算法与神经网络的结合通常不稳定，因为在线强化学习连续观察的数据都是相互关联的，因">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2020/02/11/A3C论文笔记/A3C_one_step_Q_learning.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/11/A3C论文笔记/A3C_n_step_Q_learning.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/11/A3C论文笔记/A3C_advantage_actor_critic.png">
+<meta property="og:updated_time" content="2020-02-17T04:20:03.865Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="A3C论文笔记">
+<meta name="twitter:description" content="1. A3C 概念A3C 大部分时候泛指的是一个轻型的深度强化学习框架，用于深度神经网络控制器的异步优化。完整名称是：Asynchronous Advantage Actor-Critic（A3C），就是将异步训练框架和 Advantage Actor-Critic 方法结合的产物。 过去很多观点认为简单的在线强化学习算法与神经网络的结合通常不稳定，因为在线强化学习连续观察的数据都是相互关联的，因">
+<meta name="twitter:image" content="http://yoursite.com/2020/02/11/A3C论文笔记/A3C_one_step_Q_learning.png">
+  <link rel="canonical" href="http://yoursite.com/2020/02/11/A3C论文笔记/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>A3C论文笔记 | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/11/A3C论文笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">A3C论文笔记
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-02-11 15:30:56" itemprop="dateCreated datePublished" datetime="2020-02-11T15:30:56+08:00">2020-02-11</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-17 12:20:03" itemprop="dateModified" datetime="2020-02-17T12:20:03+08:00">2020-02-17</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/11/A3C论文笔记/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/02/11/A3C论文笔记/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-A3C-概念"><a href="#1-A3C-概念" class="headerlink" title="1. A3C 概念"></a>1. A3C 概念</h2><p>A3C 大部分时候泛指的是一个轻型的深度强化学习框架，用于深度神经网络控制器的异步优化。完整名称是：Asynchronous Advantage Actor-Critic（A3C），就是将异步训练框架和 Advantage Actor-Critic 方法结合的产物。</p>
+<p>过去很多观点认为简单的在线强化学习算法与神经网络的结合通常不稳定，因为在线强化学习连续观察的数据都是相互关联的，因此很多学者利用经验回放池的方法来将连续观察的数据关联性打破（例如 DQN 和 TRPO 算法都利用了经验回放池）。但是这种方法的限制在于只能运用到离线的强化学习方法中。经验回放池有以下缺点：</p>
+<a id="more"></a>
+<ul>
+<li>使用了更多的内存和计算力。</li>
+<li>需要离线强化学习算法，并且能够利用旧策略产生的数据完成更新。</li>
+</ul>
+<p>为了解决经验回放池的限制，本文提出异步训练框架的概念，在多个并行的环境中训练多个智能体。该框架可以提升大部分强化学习的应用范围，无论是在线强化学习方法还是离线强化学习方法都可以适用这个框架。这种框架可以大大减少所需要的计算资源，不再依赖于 GPU 集群，实现在单台多核的计算机上更快训练。</p>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><h3 id="2-1-value-based-model-free"><a href="#2-1-value-based-model-free" class="headerlink" title="2.1 value-based model-free"></a>2.1 value-based model-free</h3><p>基于价值的无模型强化学习方法最典型的就是 Q-learning 方法，旨在于逼近最优动作值函数：$Q^*(s,a) \approx Q(s, a, \theta)$。目标更新公式可以表示为：</p>
+<script type="math/tex; mode=display">
+L_i(\theta_i) = \mathbb{E} \left( r + \gamma \mathop{max}_{a'} Q(s', a';\theta_{i-1})-Q(s,a;\theta_i) \right)^2</script><p>其中 $s’$ 表示 $s$ 的下一状态。这种更新方法称为“one-step”方法，因为只利用了一步回报 $r + \gamma max_{a’}Q(s’,a’;\theta_i)$。这种更新方法可能比较缓慢，因为只有一个状态动作对 $(s,a)$ 是通过奖励 $r$ 直接影响。可以采用 “n-step”方法，将 $r + \gamma max_{a’}Q(s’,a’;\theta_i)$ 替换为 $r_t + \gamma r_{t+1} + \cdots + \gamma^{n-1}r_{t+n-1}+max_a \gamma^n Q(s_{t+n}, a)$。</p>
+<h3 id="2-2-policy-based-model-free"><a href="#2-2-policy-based-model-free" class="headerlink" title="2.2 policy-based model-free"></a>2.2 policy-based model-free</h3><p>基于策略的无模型强化学习方法最典型的就是 REINFORCE 系列方法。标准的 REINFORCE 方法通过更新 $\nabla_{\theta}log\pi(a_t|s_t;\theta)$ 来实现 $\nabla_{\theta} \mathbb{E}[R_t]$ 的无偏估计。为了降低估计的方差，同时保持无偏性，通常减去状态函数 $b_t(s_t)$，因此更新方式变成：$\nabla_{\theta}log\pi(a_t|s_t;\theta)(R_t-b_t(s_t))$。</p>
+<p>当利用一个估计的状态函数进行逼近 $b_t(s_t) \approx V^\pi(s_t)$，此时 $R_t - b_t$ 可以视为动作 $a_t$ 在状态 $s_t$ 中的优势函数：$A(a_t,s_t) = Q(a_t,s_t)-V(s_t)$。这种方法可以被视为是 actor-critic 架构，本文也称为 <strong>advantage actor-critic</strong>。</p>
+<h2 id="3-算法框架"><a href="#3-算法框架" class="headerlink" title="3. 算法框架"></a>3. 算法框架</h2><p>使用异步训练框架的目的是让深度神经网络策略的训练变得稳定，但是不需要借助于经验回放池。</p>
+<ul>
+<li>首先将每个异步的学习环境放在不同的进程中。</li>
+<li>同时对于不同的学习者，可以采用不同的探索策略来扩大差异。</li>
+<li>最后采用全局的变化来对参数进行更新。</li>
+</ul>
+<p>接下来展示将异步训练框架和 one-step Q-learning 结合起来的算法：</p>
+<p><img src="/2020/02/11/A3C论文笔记/A3C_one_step_Q_learning.png" alt="A3C_one_step_Q_learning" style="zoom: 80%;"></p>
+<p>注意每个线程都有自己的环境副本，并在每一步都计算损失的梯度。同时在线网络参数 $\theta$ 和目标网络参数 $\theta^-$ 是所有线程共享的。另外并不是每一步都利用梯度去更新参数，而是先计算累计梯度，只有当过了 $I_{AsyncUpdate}$ 个时间步数才利用 $d\theta$ 更新 $\theta$ 。这样可以避免一个线程的更新迅速覆盖另一个线程的更新，提供计算效率和数据效率间的一个平衡。</p>
+<hr>
+<p>接下来展示将异步训练框架和 n-step Q-learning 结合起来的算法：</p>
+<p><img src="/2020/02/11/A3C论文笔记/A3C_n_step_Q_learning.png" alt="A3C_n_step_Q_learning" style="zoom:80%;"></p>
+<p>这种 n-step 方法是往前计算 n 个回报，与常见的后向观点相反（例如 eligibility traces 技术，翻译为“资格迹”）。为了进行一次更新，需要利用探索策略往前进行 $t_{max}$ 步，然后对于这段探索过程中遇见的每个“状态动作对”，都计算梯度。很明显，倒数第一步所用的是 “one-step”更新，倒数第二步所用的是“two-step”更新，而最后一步则是 “n-step”更新。将这些梯度全部累计起来，在更新参数的时候一次性更新。</p>
+<p>注意到 n-step 方法没有参数延迟更新时间 $I_{AsyncUpdate}$ ，这可能是因为 n-step 本身就提高了数据利用效率，不必再追求计算效率和数据效率之间的平衡。</p>
+<hr>
+<p>最后展示的是将异步训练框架和 advantage actor-critic 结合起来的方法（也就是 A3C 方法）：</p>
+<p><img src="/2020/02/11/A3C论文笔记/A3C_advantage_actor_critic.png" alt="A3C_advantage_actor_critic" style="zoom:80%;"></p>
+<p>A3C 方法维护两个网络：$\pi(a_t|s_t;\theta)$ 和 $V(s_t;\theta_v)$。与 n-step Q-learning 类似，也是往前进行 $t_{max}$ 步，然后再对参数进行更新。更新方式可以表示为：$\nabla_{\theta’} log \pi(a_t|s_t;\theta’)A(s_t,a_t;\theta,\theta_v)$，其中 $A(s_t,a_t;\theta,\theta_v)$ 就是对优势函数的估计值：$\sum_{i=0}^{k-1}\gamma^i r_{t+i} + \gamma^k V(s_{t+k};\theta_v) - V(s_t;\theta_v)$，其中 $k$ 值随不同的状态动作对而不同，上限值就是 $t_{max}$ 。</p>
+<p>虽然 $\pi$ 和 $V$ 网络所用的参数表示不同，但实际运用时，通常会共享部分参数。例如 $pi(a_t|s_t;\theta)$ 输出层使用 softmax 层，$V(s_t;\theta_v)$ 输出层使用全连接层，但是其他非输出层的参数则共享。</p>
+<p>另外在目标策略的函数中加入熵正则化项，可以避免过早收敛到非最优策略，尤其对于需要分层的行为。可以写成：$\nabla_{\theta’} log \pi(a_t|s_t;\theta’)(R_t-V(s_t;\theta_v))+\beta \nabla_{\theta’} H(\pi(s_t;\theta’))$，其中 $H$ 表示策略的熵，超参数 $\beta$ 控制熵正则项的强度。</p>
+<h2 id="4-工程上的设置"><a href="#4-工程上的设置" class="headerlink" title="4. 工程上的设置"></a>4. 工程上的设置</h2><h3 id="4-1-Atari-Game"><a href="#4-1-Atari-Game" class="headerlink" title="4.1 Atari Game"></a>4.1 Atari Game</h3><p>通过搜索方法在六个 Atari 游戏中调整超参数，然后在全部游戏的训练中固定同一套超参数。网络结构和 DQN 的相似，不过在最后一层隐藏层再连接 256 个 LSTM 单元。</p>
+<h3 id="4-2-MuJoco-Physics-Simulator"><a href="#4-2-MuJoco-Physics-Simulator" class="headerlink" title="4.2 MuJoco Physics Simulator"></a>4.2 MuJoco Physics Simulator</h3><p>输入可以分成两种：一种是机器人自身状态，一种是 RGB 像素。</p>
+<p>机器人自身状态包括：关节位置，速度，目标位置。</p>
+<p>没有在策略更新或状态更新中使用 bootstrpping 技术，而是将一个 episode 作为一次更新。</p>
+<p>[1] Mnih, V., Badia, A. P., Mirza, L., Graves, A., Harley, T., Lillicrap, T. P., … Kavukcuoglu, K. (2016). Asynchronous methods for deep reinforcement learning. <em>33rd International Conference on Machine Learning, ICML 2016</em>, <em>4</em>, 2850–2869.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/AC-框架/" rel="tag"># AC 框架</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/11/15/TRPO-PPO-论文笔记（下）/" rel="next" title="TRPO & PPO 论文笔记（下）">
+                  <i class="fa fa-chevron-left"></i> TRPO & PPO 论文笔记（下）
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/02/12/ACER论文笔记/" rel="prev" title="ACER论文笔记">
+                  ACER论文笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-A3C-概念"><span class="nav-text">1. A3C 概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-value-based-model-free"><span class="nav-text">2.1 value-based model-free</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-policy-based-model-free"><span class="nav-text">2.2 policy-based model-free</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-算法框架"><span class="nav-text">3. 算法框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-工程上的设置"><span class="nav-text">4. 工程上的设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Atari-Game"><span class="nav-text">4.1 Atari Game</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-MuJoco-Physics-Simulator"><span class="nav-text">4.2 MuJoco Physics Simulator</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

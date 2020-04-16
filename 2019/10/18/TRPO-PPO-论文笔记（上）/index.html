@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="这篇笔记主要涉及到策略梯度系列的两个算法，TRPO 和 PPO。TRPO 先提出来，PPO 实质上是对 TRPO 的改进。两篇论文的题目为 Trust Region Policy Optimization 和 Proximal Policy Optimization Algorithms 。 一、 TRPO：置信域策略优化1. TRPO简述本文提出了 Trust Region Policy Opt">
+<meta name="keywords" content="强化学习,PG,TRPO">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TRPO &amp; PPO 论文笔记（上）">
+<meta property="og:url" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/index.html">
+<meta property="og:site_name" content="Huangjp Blog">
+<meta property="og:description" content="这篇笔记主要涉及到策略梯度系列的两个算法，TRPO 和 PPO。TRPO 先提出来，PPO 实质上是对 TRPO 的改进。两篇论文的题目为 Trust Region Policy Optimization 和 Proximal Policy Optimization Algorithms 。 一、 TRPO：置信域策略优化1. TRPO简述本文提出了 Trust Region Policy Opt">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/policy_iteration_algorithm_guranteeing_nondecreasing.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/gd_vs_trpo.jpeg">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/trpo.jpeg">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/single_and_vine.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/TRPO_approximation.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/CGA.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/CGA_img.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/trpo_seudo.jpeg">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/experiment.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/experiment_param.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/atari_game_param.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/net.png">
+<meta property="og:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/trpo_like_method.png">
+<meta property="og:updated_time" content="2020-03-08T12:26:45.105Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TRPO &amp; PPO 论文笔记（上）">
+<meta name="twitter:description" content="这篇笔记主要涉及到策略梯度系列的两个算法，TRPO 和 PPO。TRPO 先提出来，PPO 实质上是对 TRPO 的改进。两篇论文的题目为 Trust Region Policy Optimization 和 Proximal Policy Optimization Algorithms 。 一、 TRPO：置信域策略优化1. TRPO简述本文提出了 Trust Region Policy Opt">
+<meta name="twitter:image" content="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/policy_iteration_algorithm_guranteeing_nondecreasing.png">
+  <link rel="canonical" href="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>TRPO & PPO 论文笔记（上） | Huangjp Blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Huangjp Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/18/TRPO-PPO-论文笔记（上）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">TRPO & PPO 论文笔记（上）
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-10-18 11:32:51" itemprop="dateCreated datePublished" datetime="2019-10-18T11:32:51+08:00">2019-10-18</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-08 20:26:45" itemprop="dateModified" datetime="2020-03-08T20:26:45+08:00">2020-03-08</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/10/18/TRPO-PPO-论文笔记（上）/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2019/10/18/TRPO-PPO-论文笔记（上）/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这篇笔记主要涉及到策略梯度系列的两个算法，TRPO 和 PPO。TRPO 先提出来，PPO 实质上是对 TRPO 的改进。两篇论文的题目为 <em>Trust Region Policy Optimization</em> 和 <em>Proximal Policy Optimization Algorithms</em> 。</p>
+<h1 id="一、-TRPO：置信域策略优化"><a href="#一、-TRPO：置信域策略优化" class="headerlink" title="一、 TRPO：置信域策略优化"></a>一、 TRPO：置信域策略优化</h1><h2 id="1-TRPO简述"><a href="#1-TRPO简述" class="headerlink" title="1. TRPO简述"></a>1. TRPO简述</h2><p>本文提出了 <em>Trust Region Policy Optimization (TRPO)</em> 算法，主要是对 <em>natural policy gradient</em> 算法的改进，适用于大型的非线性策略函数，例如神经网络。传统方法中，基于策略梯度的模型有一个缺点就是采样效率太低，需要大量的样本才能让模型学习。</p>
+<p>本文证明了可以通过最小化某个特定的目标函数，让策略每次都得到非平凡的提升。通过一系列的近似，将原本的目标函数改成实际的算法，称之为 TRPO 算法。</p>
+<p>本文中给出两种具体的实现方式：<strong>single-path</strong>方法，<strong>vine</strong>方法。TRPO 算法可以同时优化非线性策略网络中成千上万的参数，这对于传统的策略梯度方法而言几乎是不可能的。<br><a id="more"></a></p>
+<h2 id="2-相关知识"><a href="#2-相关知识" class="headerlink" title="2. 相关知识"></a>2. 相关知识</h2><p>定义随机策略 $\pi : \mathcal{S} \times \mathcal{A} \rightarrow [0, 1]$，定义 $\eta(\pi)$ 为期望折扣回报，公式如下：</p>
+<script type="math/tex; mode=display">
+\eta(\pi) = \mathbb{E}_{s_0, a_0, \cdots} \left[ \sum_{t=0}^{\infty} \gamma^t r(s_t) \right] \tag{2.1}</script><script type="math/tex; mode=display">
+s_0 \sim \rho_0(s_0), \,\, a_t \sim \pi(a_t | s_t), \,\, s_{t+1} \sim \rho(s_{t+1} | s_t, a_t)</script><p>动作值函数，价值函数和优势函数的定义：</p>
+<script type="math/tex; mode=display">
+Q_\pi(s_t, a_t) = \mathbb{E}_{s_{t+1}, a_{t+1}, \cdots} \left[ \sum_{l=0}^{\infty} \gamma^l r(s_{t+l}) \right] \tag{2.2}</script><script type="math/tex; mode=display">
+V_\pi(s_{t}) = \mathbb{E}_{a_t, s_{t+1}, \cdots} \left[ \sum_{l=0}^{\infty} \gamma^l r(s_{t+l}) \right] \tag{2.3}</script><script type="math/tex; mode=display">
+A_\pi(s, a) = Q(s, a) - V(s) \tag{2.4}</script><script type="math/tex; mode=display">
+a_t \sim \pi(a_t | s_t), \,\, s_{t+1} \sim \rho(s_{t+1} | s_t, a_t)</script><p>假设另一个策略 $\tilde{\pi}$，可以通过证明得到策略 $\tilde{\pi}$ 比策略 $\pi$ 的累积优势：</p>
+<script type="math/tex; mode=display">
+\eta(\tilde{\pi}) = \eta(\pi) + \mathbb{E}_{s_0, a_0, \cdots \sim \tilde{\pi}} \left[ \sum_{t=0}^{\infty} \gamma^t A_\pi(s_t, a_t) \right] \tag{2.5} \label{2_5}</script><p>上面的等式在论文的附录 A 中有证明。这是一个极其重要的等式，后面可以保证策略的优化是单调的，也就是不断朝着优势的方向优化。其中 $\mathbb{E}_{s_0, a_0, \cdots, \tilde{\pi}} [\dots]$ 表示动作服从策略 $\tilde{\pi}$，即 $a_t \sim \tilde{\pi}[\cdot | s_t]$。</p>
+<p>令 $\rho_\pi$ 为折扣状态访问概率，写成如下公式：</p>
+<script type="math/tex; mode=display">
+\rho_\pi(s) = P(s_0 = s) + \gamma P(s_1 = s) + \gamma^2 P(s_2 = s) \cdots , \tag{2.6}\label{2_6}</script><p>现在重写公式 $\eqref{2_5}$，将原本在时间 $t$ 维度上的叠加写成在状态 $s$ 维度上的叠加，结合公式 $\eqref{2_6}$，可以得到：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\eta(\tilde{\pi}) &= \eta(\pi) + \sum_{t=0}^\infty \sum_s P(s_t = s | \tilde{\pi}) \sum_a \tilde{\pi}(a|s) \gamma^t A_\pi(s, a) \\
+&= \eta(\pi) + \sum_s \sum_{t=0} \gamma^t P(s_t=s | \tilde{\pi}) \sum_a \tilde{\pi}(a|s) A_\pi(s, a) \\
+&= \eta(\pi) + \sum_s \rho_{\tilde{\pi}}(s) \sum_a \tilde{\pi}(a|s) A_\pi(s, a)
+\end{aligned} \tag{2.7} \label{2_7}</script><p>等式 $\eqref{2_7}$ 意味着，只要保证在每个状态 $s$ 满足 $\sum_a \tilde{\pi}(a|s) A_\pi(s, a) \ge 0$，那么策略更新 $\tilde{\pi} \rightarrow \pi$ 就一定能保证提高策略性能 $\eta$ 或者至少保持不变（当 $\sum_a \tilde{\pi}(a|s) A_\pi(s, a) = 0$ 时）。</p>
+<p>那么策略 $\tilde{\pi}$ 就可以按照贪婪算法来进行迭代更新，即$\tilde{\pi}(s) = argmax_a A_\pi(s, a)$，只要至少一个状态-动作对拥有正的优势值 $A_\pi(s, a)$，并且该状态的访问概率 $P(s)$ 不为零，策略 $\tilde{\pi}$ 的性能 $\eta(\tilde{\pi})$ 就能得到提升。但是由于预测误差和估计误差的存在，对于部分状态 $s$ 而言，可能会存在 $\sum_a \tilde{\pi}(a|s) A_\pi(s, a) &lt; 0$。</p>
+<p>等式 $\eqref{2_7}$ 中有关于新策略 $\tilde{\pi}$ 的状态访问概率 $\rho_{\tilde{\pi}}(s)$，这在实际的计算中是非常难以得到的，很难计算得到每个状态在新策略下的访问概率，甚至在旧策略 $\pi(s)$ 下的访问概率都不是通过直接计算（通常是无模型的环境），而是通过很多次采样求平均得到，更何况新策略的具体分布都不知道，也没法进行采样。为了便于计算，本文假设在每一步微小更新后，新策略 $\tilde{\pi}$ 和策略 $\pi$ 的状态访问概率是一样的，于是得到等式 $\eqref{2_8_}$：</p>
+<script type="math/tex; mode=display">
+L_\pi(\tilde{\pi}) = \eta(\pi) + \sum_s \rho_\pi(s) \sum_a \tilde{\pi}(a|s) A_\pi(s, a) \tag{2.8} \label{2_8_}</script><p>假设 $\pi_\theta(a|s)$ 是对参数向量 $\theta$ 完全可导的，可以证明 $L(\tilde{\pi})$ 和 $\eta(\tilde{\pi})$ 一阶近似(证明过程参考文献 <a href="#ref1">[1]</a> 的 Theorem 1)。也就是对于任意参数 $\theta_0$，都存在：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+L_{\pi_{\theta_0}}(\pi_{\theta_0}) &= \eta(\pi_{\theta_0}) \\
+\triangledown_\theta L_{\pi_{\theta_0}}(\pi_\theta) |_{\theta = \theta_0} &= \triangledown_\theta \eta(\pi_\theta) |_{\theta = \theta_0}
+\end{aligned}
+\tag{2.9} \label{2_9}</script><p>等式 $\eqref{2_9}$ 意味着只要步长足够小，$\pi_{\theta_0} \rightarrow \tilde{\pi}$，就能提升 $L_{\pi_{\theta_{old}}}$的性能，当然也能提升 $\eta$ 的性能。<strong>但是这个步长究竟取多小，才是这篇文章研究的主题。</strong></p>
+<p>Kakade 和 Langford 等人在 2002 年提出了一种 <em>conservative policy iteration</em> 的方法（参考文献<a href="#ref2">[2]</a>），通过这种方法可以保证每次更新后策略的性能 $\eta$ 都有一个下界。</p>
+<p>策略迭代的公式如下所示：</p>
+<script type="math/tex; mode=display">
+\pi_{new}(a|s) = (1 - \alpha) \pi_{old}(a|s) + \alpha \pi'(a|s) \\
+where \,\, \pi' = \mathop{argmin}_{\pi'} L_{\pi_{old}}(\pi')
+\tag{2.10}
+\label{2_10}</script><p>Kakade 和 Langford 等人证明了依据这个策略迭代后，$\eta$ 有一个下界，如下所示：</p>
+<script type="math/tex; mode=display">
+\eta(\pi_{new}) \ge L_{\pi_{old}}(\pi_{new}) - \frac{2\epsilon \gamma}{(1 - \gamma(1-\alpha))(1-\gamma)}\alpha^2 \\
+where \,\, \epsilon = \mathop{max}_s |E_{a \sim \pi'(a|s)}[A_\pi(s,a)]|
+\tag{2.11}
+\label{2_11}</script><p>其中 $\alpha, \gamma \in [0, 1]$，上面的不等式也可以简单写成：</p>
+<script type="math/tex; mode=display">
+\eta(\pi_{new}) \ge L_{\pi_{old}}(\pi_{new}) - \frac{2 \epsilon \gamma}{(1 - \gamma)^2} \alpha^2 \tag{2.12} \label{2_12}</script><p>因为 $\alpha \ll 1$，所以不等式右边的减数只是变大一点点，也就是 $\eta$ 的下限变弱一点（变小）。</p>
+<p>但是等式 $\eqref{2_10}$ 是一个混合的策略更新，也就是说既需要新策略，也需要旧策略来进行迭代，况且 $\pi’$ 的计算量也很大。所以本文旨在于找出适用于一般的随机策略的更新方式。</p>
+<h2 id="3-单调提升的保证"><a href="#3-单调提升的保证" class="headerlink" title="3. 单调提升的保证"></a>3. 单调提升的保证</h2><p>不等式 $\eqref{2_11}$ 意味着只要不等式右边的值在策略更新过程中得到提升，那么真实的性能 $\eta$ 也能得到提升。但是之前不等式 $\eqref{2_11}$ 的成立是针对一种混合策略迭代（<em>conservative policy iteration</em>），本文首次证明这个不等式对于一般的随机策略也是成立的，只要将 $\alpha$ 替换为衡量 $\pi$ 和 $\tilde{\pi}$ 的距离。一般的随机策略比混合策略更加适用于实际问题，因此这种延拓是很有必要的。</p>
+<p>本文首先将 $\pi$ 和 $\tilde{\pi}$ 间的距离定义为总变差散度（<em>Total variation divergence</em>），定义为 $D_{TV}(p || q) = \frac{1}{2} \sum_i |p_i - q_i|$，这是离散型的概率分布 $p$ 和 $q$，对应的连续型概率分布则将求和改为积分。</p>
+<p>根据 $D_{TV}(p || q)$ 的定义，定义 $D_{TV}^{max}$ 如下：</p>
+<script type="math/tex; mode=display">
+D_{TV}^{max}(\pi, \tilde{\pi}) = \mathop{max}_s D_{TV}(\pi(\cdot|s) \parallel \tilde{\pi}(\cdot|s)) \tag{3.1}</script><p><strong>定理Ⅰ：</strong>令 $\alpha=D_{TV}^{max}(\pi, \tilde{\pi})$，可以证明下列不等式 $\eqref{3_2}$ 是成立的，证明见附录 A。</p>
+<script type="math/tex; mode=display">
+\eta(\pi_{new}) \ge L_{\pi_{old}}(\pi_{new}) - \frac{4\epsilon\gamma}{(1-\gamma)^2}\alpha^2 \\
+where \,\, \epsilon = \mathop{max}_{s, \, a} |A_\pi(s,a)|
+\tag{3.2}
+\label{3_2}</script><p>至于为什么可以令 $\alpha=D_{TV}^{max}(\pi, \tilde{\pi})$，附录 A 倒数第三段有讲，可以参考文献<a href="#ref3">[3]</a>。</p>
+<p>根据 TV 散度和 KL 散度的关系：$D_{TV}(p || q)^2 \le D_{KL}(p || q)$，可以得到不等式$\eqref{3_3}$。（TV 散度和 KL 散度其实都是 F 散度的具体形式）</p>
+<script type="math/tex; mode=display">
+\eta(\tilde{\pi}) \ge L_{\pi}(\tilde{\pi}) - CD_{KL}^{max}(\pi, \tilde{\pi}),\\
+where \,\, C = \frac{4\epsilon\gamma}{(1-\gamma)^2}
+\tag{3.3}
+\label{3_3}</script><p>根据不等式 $\eqref{3_3}$ 得到寻找 $\tilde{\pi}$ 的算法，如图所示。<br><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/policy_iteration_algorithm_guranteeing_nondecreasing.png" alt="policy_iteration_algorithm_guranteeing_nondecreasing"></p>
+<p>上述的算法可以保证产生性能单调提升的策略序列，也就是 $\eta(\pi_0) \le \eta(\pi_1) \le \eta(\pi_2) \le \dots$ 证明如下：</p>
+<script type="math/tex; mode=display">
+let \,\, M_i(\pi) = L_{\pi_i}(\pi) - CD^{max}_{KL}(\pi_i, \pi) \\
+\eta(\pi_{i+1}) \ge M_i(\pi_{i+1}) \,\, by \,\, equation \,\, (3.3) \\
+\eta(\pi_i) = M_i (\pi_i) \\
+\eta(\pi_{i+1}) - \eta(\pi_i) \ge M_i(\pi_{i+1}) - M(\pi_i)
+\tag{3.4}</script><p>在上述的算法中，需要假设每次估计的优势值 $A_\pi(\pi)$ 都是正确的。另外，KL 散度是作为一个惩罚项去更新策略 $\tilde{\pi}$，但是惩罚项系数 $C$ 计算复杂度高，且依赖于正确的估计优势值 $A_\pi(\pi)$。<strong>另外大的惩罚系数 $C$ 通常会导致学习步长太小，但是又很难选择一个小的惩罚系数。</strong>这就引出 <em>TRPO</em> 方法，通过添加 KL 散度约束而不是惩罚项系数 $C$ 来更新策略。</p>
+<h2 id="4-参数化策略的优化（TRPO-登场）"><a href="#4-参数化策略的优化（TRPO-登场）" class="headerlink" title="4. 参数化策略的优化（TRPO 登场）"></a>4. 参数化策略的优化（TRPO 登场）</h2><p>上一小节的理论推导没有涉及到策略的参数化，以及假设在每个状态策略的性能都能被准确的估计。现在开始推导更加实际的算法，基于随机初始参数化的策略和有限的样本情况下。</p>
+<p>参数化策略 $\pi(a|s)$ 写成 $\pi_\theta(a|s)$，对上一节的符号进行简写： $\eta(\theta) := \eta(\pi_\theta)$，$L_\theta(\tilde{\theta}) := L_{\pi_\theta}(\pi_\tilde{\theta})$，$D_{KL}(\theta \parallel \tilde{\theta}) := D_{KL}(\pi_\theta \parallel \pi_{\tilde{\theta}})$。上一小节证明了 $\eta(\theta) \ge L_{\theta_{old}}(\theta) - CD^{max}_{KL}(\theta_{old}, \theta)$，当 $\theta = \theta_{old}$时等号成立。因此可以通过下面的最大化公式来更新 $\theta$，保证目标 $\eta$ 单调提升：</p>
+<script type="math/tex; mode=display">
+\theta = \mathop{maximize}_\theta [L_{\theta_{old}}(\theta) - CD^{max}_{KL}(\theta_{old}, \theta)] 
+\tag{4.1}</script><p>但是实际计算中，如果采用惩罚系数 $C$，$\theta$ 更新的步长通常非常小，收敛速度非常慢。因此采用一种可以采用稍大步长的方式，在新旧策略的 KL 散度上添加约束，代替理论上采用的惩罚系数 $C$。这个约束就称为 <em>trust region constraint</em>（置信域），如公式 $\eqref{4_2}$ 所示。</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_\theta L_{\theta_{old}}(\theta) \\
+subject \,\, to \,\, D^{max}_{KL}(\theta_{old},\theta) \le \delta
+\tag{4.2}
+\label{4_2}</script><p><strong>但是还存在另外一个问题：约束条件 $D^{max}_{KL}(\theta_{old},\theta) \le \delta$ 表示在状态空间的每一点都要满足约束（结合KL散度的定义来看），这对于状态空间较大的普遍情况是不切实际的。</strong>因此采用了一个技巧，将 $D^{max}_{KL}$ 用 $\overline{D}^{\rho}_{KL}$ 代替：</p>
+<script type="math/tex; mode=display">
+\overline{D}^{\rho}_{KL}(\theta_1, \theta_2) := \mathbb{E}_{s \sim \rho}[D_{KL}(\pi_1(\cdot| s) \parallel \pi_2(\cdot | s))] 
+\tag{4.3}</script><p>$D^{max}_{KL}$ 和 $\overline{D}^{\rho}_{KL}$ 的区别就在于前者需要采集到状态空间的每个点，而后者只需要利用已经采集到的状态空间中的样本。因此公式 $\eqref{4_2}$ 可以写成以下形式：</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_\theta L_{\theta_{old}}(\theta) \\
+subject \,\, to \,\, \overline{D}^{\rho_{\theta_{old}}}_{KL}(\theta_{old},\theta) \le \delta
+\tag{4.4}
+\label{4_4}</script><h2 id="5-算法模型"><a href="#5-算法模型" class="headerlink" title="5. 算法模型"></a>5. 算法模型</h2><p>展开公式 $\eqref{4_4}$ 中的 $L_{\theta_{old}}$，可以得到:</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_\theta \sum_s \rho_{\theta_{old}}(s) \sum_a \pi_\theta(a|s) A_{\theta_{old}}(s, a) \\
+subject \,\, to  \,\, \overline{D}^{\rho_{\theta_{old}}}_{KL}(\theta_{old}, \theta) \le \delta
+\tag{5.1}
+\label{5_1}</script><p>接下来采用三个小技巧将公式 $\eqref{5_1}$ 改写成可以利用蒙特卡洛方法进行逼近的形式：</p>
+<ol>
+<li>将 $\sum_s \rho_{\theta_{old}}(s)[\cdots]$ 替换为 $\frac{1}{1-\lambda}\mathbb{E}_{s \sim \rho_{\theta_{old}}}[\cdots]$。参考公式 $\eqref{2_6}$，对 $\lambda^iP(s_i)$ 求和取平均即可得到。</li>
+<li>将优势值 $A_{\theta_{old}}$ 替换为 $Q$ 值 $Q_{\theta_{old}}$。</li>
+<li>利用重要性采样方法替换在动作上的累加，采样分布设为 $q$，可以得到：<script type="math/tex; mode=display">
+\sum_a \pi_\theta(a|s_n)A_{\theta_{old}}(s_n, a) = \mathbb{E}_{a \sim q} \left[\frac{\pi_\theta(a|s_n)}{q(a|s_n)} A_{\theta_{old}}(s_n, a) \right]</script></li>
+</ol>
+<p>最终公式 $\eqref{5_1}$ 改写成以下形式：</p>
+<script type="math/tex; mode=display">
+\mathop{maximize}_\theta \,\, \mathbb{E}_{s \sim \rho_{\theta_{old}}, a \sim q} \left[\frac{\pi_\theta(a|s)}{q(a|s)} A_{\theta_{old}}(s, a)\right] \\
+subject \,\, to \,\, \mathbb{E}_{s \sim \rho_{\theta_{old}}} [D_{KL}(\pi_{\theta_{old}}(\cdot | s) \parallel \pi_\theta(\cdot | s))] \le \delta
+\tag{5.2}
+\label{5_2}</script><p>直观上来看，在梯度上升法中，我们判断最陡峭的方向，之后朝着那个方向前进。但是如果学习率太高的话，这样的行动也许让我们远离真正的目标函数，甚至会变成灾难。 而在信赖域中，我们用 $\delta$ 变量限制我们的搜索区域。前面已经用数学证明过，这样的区域可以保证在它到达局部或者全局最优策略之前，它的优化策略会优于当前策略。</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/gd_vs_trpo.jpeg" alt="gd_vs_trpo" style="zoom:80%;"></p>
+<p>当我们不断迭代下取，就可以到达最优点。</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/trpo.jpeg" alt="trpo" style="zoom:80%;"></p>
+<p>剩下要做的就是将公式 $\eqref{5_2}$ 中的期望利用采样的平均来代替，以及用经验估计值代替 $Q$ 值。采样的模式有两种，一种称为 <em>single path</em>，另一种称为 <em>vine</em>。</p>
+<h3 id="5-1-Single-Path"><a href="#5-1-Single-Path" class="headerlink" title="5.1 Single Path"></a>5.1 Single Path</h3><p>这种模式下的采样，首先采集一系列初始状态 $s_0 \sim \rho_0$，然后从每个初始状态开始，按照策略 $\pi_{\theta_{old}}$（也就是令 $q = \pi_{\theta_{old}}$） 进行一段时间仿真，生成轨迹 $s_0, a_0, s_1, a_1, \cdots , s_{T-1}, a_{T-1}, s_T$。最后 $Q_{\theta_{old}}(s, a)$ 的计算是利用轨迹中每一对 $(s_t, a_t)$ 计算未来折扣回报，其中下标 $t= 0, 1, 2, \cdots, T-1, T$。</p>
+<h3 id="5-2-Vine"><a href="#5-2-Vine" class="headerlink" title="5.2 Vine"></a>5.2 Vine</h3><p>首先也是采集一系列初始状态 $s_0 \sim \rho_0$，然后从每个初始状态开始，按照策略 $\pi_{\theta_i}$ 进行一段时间仿真，生成轨迹。紧接着，我们沿着这些轨迹，选择 N 个状态组成一个子集，称为 <em>rollout set</em>。对于每个 <em>rollout set</em> 中的状态 $s_n$，我们根据 $a_{n, k} \sim q(\cdot | s_n)$ 采样 $K$ 个动作。$q(\cdot | s_n)$ 可以取值为 $q(\cdot | s_n) = \pi_i(\cdot | s_n)$，也可以是均匀分布，论文中建议对于连续问题采用第一种，对于离散问题采用第二种。</p>
+<p>对于每个 $s_n$ 和动作 $a_{n, k}$，通过以 $s_n$ 和动作 $a_{n, k}$ 为起点进行一段仿真，得到一小段轨迹，然后估计 $\hat{Q}_{\theta_i}(s_n, a_n, k)$ 的值。</p>
+<p>因为 <em>vine</em> 模式在每个状态上多做了一些 rollout，可以得到方差更小的 Q 值估计。但是 <em>vine</em> 模式也有对应的缺点，需要调用更多次仿真器，并且对于真实的物理系统，还需要系统支持回退到任意一个过去的状态。两种模式的采样示意图如下所示：<br><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/single_and_vine.png" alt="采样模式示意图"></p>
+<h3 id="5-3-算法流程"><a href="#5-3-算法流程" class="headerlink" title="5.3 算法流程"></a>5.3 算法流程</h3><ol>
+<li><p>使用 <em>single path</em> 或者 <em>vine</em> 模式进行采样，采集一系列的状态——动作对，并且利用蒙特卡洛方法估计它们的Q值。</p>
+</li>
+<li><p>对这些样本求平均，建立公式 $\eqref{5_2}$ 中的目标函数和约束。</p>
+</li>
+<li><p>解决带有约束的优化问题，对参数 $\theta$ 进行更新。使用的是<strong>共轭梯度算法</strong>（conjugate gradient algorithm）和<strong>线性搜索</strong>（line search）。</p>
+</li>
+</ol>
+<h3 id="5-4-解决带约束的优化问题"><a href="#5-4-解决带约束的优化问题" class="headerlink" title="5.4 解决带约束的优化问题"></a>5.4 解决带约束的优化问题</h3><p>最后需要求解公式 $\eqref{5_2}$ ，即求解：</p>
+<script type="math/tex; mode=display">
+maximize \,\, L_{\theta_{old}}(\theta) \,\, subject \,\, to \,\, \overline{D}_{KL}(\theta_{old},\theta) \le \delta \tag{5.3}</script><p>算法分成两个部分：1) 对目标函数进行一阶逼近，对约束条件进行二阶逼近，然后计算梯度方向。2) 在该方向上进行线性搜索，保证我们可以在非线性约束条件下提升非线性目标函数。</p>
+<p>首先对目标函数进行一阶逼近，以及对约束条件进行二阶逼近 <a href="#ref4">[4]</a>，结果如下：</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/TRPO_approximation.png" alt="TRPO_approximation" style="zoom: 90%;"></p>
+<p>因此目标函数可以重写为：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\theta_{k+1}=\mathop{argmax}_\theta[g^T(\theta-\theta_k)] \\
+s.t. \,\, \frac{1}{2}(\theta-\theta_k)F(\theta-\theta_k) \le \delta 
+\end{aligned}
+\tag{5.4}</script><p>通过构造拉格朗日乘法，以及结合 KKT 条件，可以解出：</p>
+<script type="math/tex; mode=display">
+\theta_{k+1}=\theta_k+\sqrt{\frac{2\delta}{g^TF^{-1}g}}F^{-1}g \tag{5.5} \label{5_5}</script><p>问题来了，$F^{-1}$ 的计算复杂度很高。所以，论文中利用了共轭梯度直接计算 $F^{-1}g$，而不去求逆。</p>
+<p>共轭梯度算法的伪代码如下：</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/CGA.png" alt="CGA" style="zoom:90%;"></p>
+<p>共轭梯度法类似于梯度下降法，但是它可以在最多 $N$ 次迭代之中找到最优点，其中 $N$ 表示模型之中的参数数量。 </p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/CGA_img.png" alt="CGA_img" style="zoom:80%;"></p>
+<p>根据共轭梯度算法，如果 $Q \in \mathbb{R}^{n\times n}$ 是一个正定矩阵，那么最小值 $x^*$ 就等于:</p>
+<script type="math/tex; mode=display">
+Q x^*=b \,\,\,\, \Rightarrow \,\,\,\, x^*=Q^{-1}b</script><p>$Q$ 是一个正定矩阵，恰好我们的 $F$ 也是一个正定矩阵。因此可以通过共轭梯度算法求出搜索方向 $s \approx A^{-1}g$ 。那么等式 $\eqref{5_5}$ 可以写成：</p>
+<script type="math/tex; mode=display">
+\theta_{k+1}=\theta_k+\sqrt{\frac{2\delta}{s^TFs}}s \tag{5.6} \label{5_6}</script><p>其中学习率为：</p>
+<script type="math/tex; mode=display">
+\beta=\sqrt{\frac{2\delta}{s^TFs}} \tag{5.7}</script><p>此时使用线性搜索方法，如果该学习率下得到的新的策略比原有的策略的 loss 有改进，或者满足 $\overline{D}_{KL}(\theta_{old}, \theta) \le \delta$ ，则直接使用新策略网络替代原有网络，否则指数减少 $\beta$，直到达到理想的训练效果。</p>
+<p>所以 TRPO 算法的完整流程为（<strong>这个伪代码符号不太对应，后续会修改</strong>）：</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/trpo_seudo.jpeg" alt="trpo_seudo" style="zoom:90%;"></p>
+<hr>
+<p>不过，在 CGA 算法中，我们需要计算 $Qd_k$，也就是 $Fg_k$，论文中给出了该矩阵-向量乘积的计算方法。</p>
+<p>首先假设分布 $\pi_\theta(\cdot|x)$ 可以用参数向量 $\mu_\theta(x)$ 来描述（$\mu$ 是分布的均值），即 $\pi(\mu|x)$ ，那么两个策略的 $KL$ 散度可以重新写成：</p>
+<script type="math/tex; mode=display">
+D_{KL}(\pi_{\theta_{old}}(\cdot|x) \parallel \pi_{\theta}(\cdot|x))=kl(\mu_{\theta}(x),\mu_{old}) \tag{5.8} \label{5_8}</script><p>其中 $kl$ 是两个均值参数向量对应的分布的 $KL$ 散度。对等式 $\eqref{5_8}$ 进行二次求导，可以获得：</p>
+<script type="math/tex; mode=display">
+\frac{\partial \mu_a(x)}{\partial \theta_i} \frac{\partial \mu_b(x)}{\partial \theta_j} k''_{ab}(\mu_\theta(x),\mu_{old})+\frac{\partial^2\mu_a(x)}{\partial\theta_i \partial\theta_j}kl'_a(\mu_\theta(x),\mu_{old}) \tag{5.9} \label{5_9}</script><p>式子 $\eqref{5_9}$ 的第一项表示对 $kl(\mu_{\theta}(x),\mu_{old})$ 进行二次求偏导，其中有求和的操作。如果 $\mu$ 用神经网络表示，那么第二项明显为 $0$，所以只剩第一项。令 $J := \frac{\partial \mu_a(x)}{\partial \theta_i}$ ，第一项可以写为 $J^TMJ$，其中 $M$ 表示均值参数向量 $\mu$ 的分布的费舍尔信息矩阵。$J$ 的计算通过神经网络的反向传播算法可以轻易求解，而 $M$ 的计算依赖于 $\mu$ 描述的分布的具体形式。注意到此时求解费舍尔信息矩阵 $M$ 需要的不再是一组数据 $x$，而是它们的均值 $\mu$。</p>
+<p>现在，计算 $Fg$ 就可以写成 $J^TMJg$。</p>
+<p>不过共轭梯度算法中需要迭代 $N$ 次，$N$ 表示模型中参数的数量。每一次迭代都要重新计算费舍尔信息矩阵和一个向量的乘积。论文中运用一个技巧，就是只迭代  $k=10$ 次，而不是迭代 $k=N$ 次，因为他们发现就算 $k$ 继续迭代，效果也提升不了多少，反而大大增加计算复杂度。</p>
+<p>另外，文中还利用了另一个减少计算复杂度的技巧：因为费舍尔信息矩阵仅仅是一个度量量度，只要数据量足够，算出的值与真实值偏差不大，因此文中只采用 $10 \%$ 的数据计算费舍尔信息矩阵，大量减少计算复杂度。</p>
+<h2 id="6-工程上的设置"><a href="#6-工程上的设置" class="headerlink" title="6. 工程上的设置"></a>6. 工程上的设置</h2><h3 id="6-1-机器人实验"><a href="#6-1-机器人实验" class="headerlink" title="6.1 机器人实验"></a>6.1 机器人实验</h3><p>机器人控制实验总共设计了三种，分别是蛇形机器人、跳跳机器人和两足机器人。如下图所示。</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/experiment.png" alt="experiment"></p>
+<p>比较感兴趣的是他们状态和奖励怎么定义，上面三种机器人状态空间都是广义位置和广义速度，各自奖励函数定义如下：</p>
+<ol>
+<li>蛇形机器人的状态空间有 10 个维度，奖励函数定义为：$r(x,u)=v_x-10^{-5} |u|^2$ ，其中 $v_x$ 表示在前进方向的速度，$u$ 表示所有所有关节的功耗。</li>
+<li>跳跳机器人的状态空间有 12 个维度，奖励函数定义为：$r(x,u)=v_x-10^{-5} |u|^2+nonterminal$，如果回合未结束，即机器人没有倒，则 $nonterminal=1$，否则为 0。相当于一个额外的奖励。</li>
+<li>两足机器人的状态空间有 18 个维度，奖励函数与跳跳机器人相同，并且额外增加了足底压力的惩罚，压力越大，惩罚越大。这是为了让两足机器人有更加顺滑的行走，而不是变成跳跳机器人。</li>
+</ol>
+<p>实验中设定 $KL$ 散度的阈值 $\delta=0.01$。其余参数的设置如下表所示：</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/experiment_param.png" alt="experiment_param"></p>
+<h3 id="6-2-Atari-游戏实验"><a href="#6-2-Atari-游戏实验" class="headerlink" title="6.2 Atari 游戏实验"></a>6.2 Atari 游戏实验</h3><p>参数设置如下：</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/atari_game_param.png" alt="atari_game_param" style="zoom:80%;"></p>
+<h3 id="6-3-网络结构"><a href="#6-3-网络结构" class="headerlink" title="6.3 网络结构"></a>6.3 网络结构</h3><p>对于机器人的控制，状态空间和动作空间都是连续的，我们利用高斯分布对策略进行建模。神经网络采用全连接层，输入是状态空间，输出是高斯分布的期望值，网络参数为 $\{W_i,b_i\}^L_{i=1}$。另外还有一组单独的参数 $r$ 表示标准差的 $log$ 值，与神经网络的输出（均值）共同描述高斯分布。即策略最终可以描述为：</p>
+<script type="math/tex; mode=display">
+\pi_\theta(a|s)=\mathcal{N}\left(mean=NeuralNet(s;\{W_i,b_i\}^L_{i=1}),stdev=exp(r)\right)</script><p>对于离散的动作空间，神经网络的输入是状态空间，对输出采用 $softmax$ 函数，取概率最大的动作。</p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/net.png" alt="net" style="zoom:70%;"></p>
+<h2 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h2><p>近年来，学界开始将优化方法中的信赖域（Trust  region）方法引入增强学习，并在各种实验场景中取得了良好的效果。其中典型的有 TPRO 和受其影响衍生出的一系列前沿算法，如 PPO，Trust-PCL，ACER等。其中 PPO 已成为 OpenAI 的默认增强学习算法。 </p>
+<p><img src="/2019/10/18/TRPO-PPO-论文笔记（上）/trpo_like_method.png" alt="trpo_like_method" style="zoom: 80%;"></p>
+<p>信赖域系增强学习方法，顾名思义，来源于优化论中的信赖域方法和机器学习中增强学习的结合。</p>
+<p>先介绍一下信赖域方法。在 Jorge Nocedal 和 Stephen J. Wright 的《Numerical Optimization》一书的第 2.2 节介绍了解优化问题的两种策略：Line search 和 Trust region。本质上它们的作用都是在优化迭代过程中从当前点找寻下一点。它们的最大区别是先确定步长还是先确定方向。Line search 方法先确定方向再确定步长。而 Trust region 方法则先把搜索范围缩小到一个小的范围，小到能够用另一个函数（Model function）去近似目标函数（Objective function），然后通过优化这个 Model function 来得到参数更新的方向及步长。在该书的第三和第四章分别着力介绍了 Line search 和Trust region方法。</p>
+<p>策略梯度方法是强化学习中非常重要而且历史悠久的一类方法。下面简单介绍一下策略梯度方法的重要历史节点。早在 1992 年 Ronald J. Williams 提出的 REINFORCE 算法就是 PG 的雏形。它的基本思想是考虑由参数 $\theta$ 控制的随机策略 $\pi(\theta)$，然后通过优化与策略相关的目标函数 $J(\theta)$（比如累积折扣回报和）来更新策略的参数。 之后， 行动者-评论家（Actor-Critic, AC）方法提出以解决原始策略梯度方法中方差较大，样本利用率低的问题。1998 年， Amari 提出《Natural Gradient Works Efficiently in Learning》， 通过自然梯度（Natural gradient）代替标准梯度（Standard gradient）来解决梯度算法面临平坦区域过早收敛或收敛速度过慢的问题，直观上就是，它使得参数在相对于参数不太敏感的地方，步长大；而在敏感的地方，步长小。此后，Kakade 在 2001 年的论文《Natural Policy Gradient》将自然梯度引入增强学习中的 PG 方法。策略参数的更新方向就变为自然梯度。Peters 等人在 2005 年的论文《Natural Actor-Critic》中讨论了它与 AC 框架的结合。之后在论文《Reinforcement Learning of Motor Skills with Policy Gradients》中对这些工作有些总结。</p>
+<h2 id="8-参考文献"><a href="#8-参考文献" class="headerlink" title="8. 参考文献"></a>8. 参考文献</h2><p><span id="ref1">[1]</span> Sutton, R. S., McAllester, D., Singh, S., &amp; Mansour, Y. (2000). Policy gradient methods for reinforcement learning with function approximation. Advances in Neural Information Processing Systems, 1057–1063.</p>
+<p><span id="ref2">[2]</span> Kakade, S., &amp; Langford, J. (2002). Approximately Optimal Approximate Reinforcement Learning. 1Proceedings of the 19th International Conference on Machine Learning, 267–274.</p>
+<p><span id="ref3">[3]</span> Levin, D. A., Peres, Y., and Wilmer, E. L. Markov chains and mixing times. American Mathematical Society, 2009.</p>
+<p><span id="ref4">[4]</span> Yi Da, Xu,   Policy Gradient mathematics. 2019</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/强化学习/" rel="tag"># 强化学习</a>
+            
+              <a href="/tags/PG/" rel="tag"># PG</a>
+            
+              <a href="/tags/TRPO/" rel="tag"># TRPO</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/10/16/DQN代码实现/" rel="next" title="DQN代码实现">
+                  <i class="fa fa-chevron-left"></i> DQN代码实现
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/11/15/TRPO-PPO-论文笔记（下）/" rel="prev" title="TRPO & PPO 论文笔记（下）">
+                  TRPO & PPO 论文笔记（下） <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、-TRPO：置信域策略优化"><span class="nav-text">一、 TRPO：置信域策略优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-TRPO简述"><span class="nav-text">1. TRPO简述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-相关知识"><span class="nav-text">2. 相关知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-单调提升的保证"><span class="nav-text">3. 单调提升的保证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-参数化策略的优化（TRPO-登场）"><span class="nav-text">4. 参数化策略的优化（TRPO 登场）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-算法模型"><span class="nav-text">5. 算法模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-Single-Path"><span class="nav-text">5.1 Single Path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-Vine"><span class="nav-text">5.2 Vine</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-算法流程"><span class="nav-text">5.3 算法流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-解决带约束的优化问题"><span class="nav-text">5.4 解决带约束的优化问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-工程上的设置"><span class="nav-text">6. 工程上的设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-机器人实验"><span class="nav-text">6.1 机器人实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-Atari-游戏实验"><span class="nav-text">6.2 Atari 游戏实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-网络结构"><span class="nav-text">6.3 网络结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-总结"><span class="nav-text">7. 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-参考文献"><span class="nav-text">8. 参考文献</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/dog.jpg"
+      alt="Huangjp">
+  <p class="site-author-name" itemprop="name">Huangjp</p>
+  <div class="site-description" itemprop="description">学而不思则罔 思而不学则殆</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Huangjp</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'BkRC1SYitLwztmNcM1fllQXg-gzGzoHsz',
+    appKey: '84rnDPQXuQoaFph0FANDMMJL',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>
