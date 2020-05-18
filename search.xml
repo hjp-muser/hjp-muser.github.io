@@ -1,6 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[Python中动态导入对象importlib.import_module()的使用]]></title>
+    <url>%2F2020%2F04%2F21%2FPython%E4%B8%AD%E5%8A%A8%E6%80%81%E5%AF%BC%E5%85%A5%E5%AF%B9%E8%B1%A1importlib-import-module-%E7%9A%84%E4%BD%BF%E7%94%A8%2F</url>
+    <content type="text"><![CDATA[https://blog.csdn.net/edward_zcl/article/details/88809212 背景一个函数运行需要根据不同项目的配置，动态导入对应的配置文件运行。 解决文件结构 1234567891011121314151617a #文件夹 │a.py │__init__.pyb #文件夹 │b.py │__init__.py ├─c#文件夹 │c.py │__init__.py# c.py 中内容args = &#123;&apos;a&apos;:1&#125;class C: def c(self): pass 目的 向a模块中导入c.py中的对象 解决方案 a.py 123456789import importlibparams = importlib.import_module('b.c.c') #绝对导入params_ = importlib.import_module('.c.c',package='b') #相对导入# 对象中取出需要的对象params.args #取出变量params.C #取出class Cparams.C.c #取出class C 中的c 方法 以上就是动态函数import_module的使用方法 又如：https://blog.csdn.net/mouday/article/details/84062182 Python编程：importlib.import_module动态导入模块环境：python 3.6 文件结构 12345├── clazz│ ├── __init__.py│ ├── a.py│ └── b.py└── main.py a.py 的代码 12def show(): print("show A") b.py 的代码 12def show(): print("show B") 从main中导入clazz包中的a 和b 模块 main.py 1234567891011import importlib# 绝对导入a = importlib.import_module("clazz.a")a.show()# show A# 相对导入b = importlib.import_module(".b", "clazz")b.show()# show B 注意，相对导入有个一点.， 类似路径。]]></content>
+      <categories>
+        <category>python</category>
+      </categories>
+      <tags>
+        <tag>python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[python中defaultdict用法详解]]></title>
+    <url>%2F2020%2F04%2F21%2Fpython%E4%B8%ADdefaultdict%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3%2F</url>
+    <content type="text"><![CDATA[作者：dpengwang链接：https://www.jianshu.com/p/bbd258f99fd3来源：简书 1. 认识 defaultdict当我使用普通的字典时，用法一般是dict={},添加元素的只需要dict[element] =value即，调用的时候也是如此，dict[element] = xxx,但前提是element字典里，如果不在字典里就会报错，如： 这时defaultdict就能排上用场了，defaultdict的作用是在于，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值，这个默认值是什么呢，下面会说。 如何使用defaultdictdefaultdict接受一个工厂函数作为参数，如下来构造： 1dict =defaultdict( factory_function) 这个factory_function可以是list、set、str等等，作用是当key不存在时，返回的是工厂函数的默认值，比如list对应[ ]，str对应的是空字符串，set对应set( )，int对应0，如下举例： 123456789101112from collections import defaultdictdict1 = defaultdict(int)dict2 = defaultdict(set)dict3 = defaultdict(str)dict4 = defaultdict(list)dict1[2] ='two'print(dict1[1])print(dict2[1])print(dict3[1])print(dict4[1]) 输出： 12340set()[]]]></content>
+      <categories>
+        <category>python</category>
+      </categories>
+      <tags>
+        <tag>python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[python 单元测试框架之unittest框架简单总结]]></title>
+    <url>%2F2020%2F04%2F18%2Fpython-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6%E4%B9%8Bunittest%E6%A1%86%E6%9E%B6%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93%2F</url>
+    <content type="text"><![CDATA[原文链接：https://blog.csdn.net/xiaoquantouer/java/article/details/75089200 一、什么是单元测试单元测试是用来对一个模块、一个函数或者一个类来进行正确性检验的测试工作。 比如对于函数abs()，我们可以编写的测试用例为： （1）输入正数，比如1、1.2、0.99，期待返回值与输入相同 （2）输入复数，比如-1、-1.2、-0.99，期待返回值与输入相反 （3）输入0，期待返回0 （4）输入非数值类型，比如None、[]、{}、期待抛出TypeError 把上面这些测试用例放到一个测试模块里，就是一个完整的单元测试 二、unittest工作原理unittest中最核心的四部分是：TestCase，TestSuite，TestRunner，TestFixture （1）一个TestCase的实例就是一个测试用例。测试用例就是指一个完整的测试流程，包括测试前准备环境的搭建（setUp），执行测试代码（run），以及测试后环境的还原（tearDown）。元测试（unit test）的本质也就在这里，一个测试用例是一个完整的测试单元，通过运行这个测试单元，可以对某一个问题进行验证。 （2）而多个测试用例集合在一起，就是TestSuite，而且TestSuite也可以嵌套TestSuite。 （3）TestLoader是用来加载TestCase到TestSuite中的。 （4）TextTestRunner是来执行测试用例的，其中的run(test)会执行TestSuite/TestCase中的run(result)方法 （5）测试的结果会保存到TextTestResult实例中，包括运行了多少测试用例，成功了多少，失败了多少等信息。 综上，整个流程就是首先要写好TestCase，然后由TestLoader加载TestCase到TestSuite，然后由TextTestRunner来运行TestSuite，运行的结果保存在TextTestResult中，整个过程集成在unittest.main模块中。]]></content>
+      <categories>
+        <category>技术总结</category>
+      </categories>
+      <tags>
+        <tag>unit test</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[pytorch 编程总结]]></title>
+    <url>%2F2020%2F04%2F18%2Fpytorch-%E7%BC%96%E7%A8%8B%E6%80%BB%E7%BB%93%2F</url>
+    <content type="text"><![CDATA[1. pytorch 设定随机种子为了让实验复现，需要设定随机种子。pytorch 需要设定以下五条语句： 1234torch.manual_seed(myseed) # CPUtorch.cuda.manual_seed(myseed) # GPUtorch.cuda.manual_seed_all(myseed) # multi-GPUtorch.backends.cudnn.deterministic = True # cpu/gpu结果保持一致]]></content>
+      <categories>
+        <category>技术总结</category>
+      </categories>
+      <tags>
+        <tag>pytorch</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[学术网站汇总]]></title>
     <url>%2F2020%2F04%2F09%2F%E5%AD%A6%E6%9C%AF%E7%BD%91%E7%AB%99%E6%B1%87%E6%80%BB%2F</url>
     <content type="text"><![CDATA[1. 论文网站https://arxiv.org/ ：论文预印本发布网站，可以搜论文。 https://paperswithcode.com/ ：查找论文代码。 https://paperswithcode.com/sota ：查找领域的 state-of-art 论文 https://www.bibsonomy.org/ ：论文 bibtex 引用格式查询，论文发布链接查询 https://openreview.net/ ：查找论文作者的 review]]></content>
@@ -28,8 +72,8 @@
         <category>强化学习</category>
       </categories>
       <tags>
-        <tag>强化学习</tag>
         <tag>AC</tag>
+        <tag>强化学习</tag>
         <tag>Trust Region</tag>
         <tag>PCL</tag>
       </tags>
@@ -42,9 +86,9 @@
         <category>强化学习</category>
       </categories>
       <tags>
+        <tag>AC</tag>
         <tag>Q-learning</tag>
         <tag>RL</tag>
-        <tag>AC</tag>
       </tags>
   </entry>
   <entry>
@@ -68,8 +112,8 @@
         <category>强化学习</category>
       </categories>
       <tags>
-        <tag>强化学习</tag>
         <tag>AC</tag>
+        <tag>强化学习</tag>
         <tag>DPG</tag>
       </tags>
   </entry>
@@ -81,8 +125,8 @@
         <category>强化学习</category>
       </categories>
       <tags>
-        <tag>强化学习</tag>
         <tag>AC</tag>
+        <tag>强化学习</tag>
       </tags>
   </entry>
   <entry>
@@ -102,7 +146,7 @@
   <entry>
     <title><![CDATA[Hindsight Experience Replay]]></title>
     <url>%2F2020%2F02%2F29%2FHindsight-Experience-Replay%2F</url>
-    <content type="text"><![CDATA[1. HER 概念对于机器人的强化学习算法，存在的挑战就是奖励函数的设置，不但需要考虑如何反映任务的完成水平，同时还需要指导策略的优化。有时，奖励函数的设置还需涉及到具体领域的专业知识。如果不对这些复杂的工程问题进行考虑，而简单用奖励函数表示任务成功或失败，就会造成奖励系数问题。就算仔细设计了奖励函数，可扩展性和鲁棒性也不高。 为了解决奖励稀疏的问题，本文提出了 HER 算法。HER 算法可以针对稀疏和二进制奖励的情况，提高样本效率，进而避免涉及复杂的奖励函数。可以将 HER 算法与其他 off-policy 强化学习算法结合。二进制奖励是指奖励只有两种值，出现在任务成功或任务失败的时候。 HER 算法具备推理能力，能够实现系统中任意状态为目标的任务。HER 参考论文 [1] 的通用策略设计，对于输入，不仅输入当前状态，而且需要目标状态。 HER 背后的核心思想是，在每个 episode 中都回放不同的目标（即当前 episode 需要实现的目标），而不止是最终要实现的目标。 2. 相关知识2.1 RL 基础最优动作值函数（对于最优策略 $\pi^$，满足 $Q^{\pi^}(s,a) \ge Q^\pi(s,a)$，$\forall s \in S, \forall a \in A$）： Q^{*} (s,a) = \mathbb{E}_{s'\sim p(\cdot|s,a)} \left[ r(s,a) + \gamma \mathop{\max}_{a'\in A} Q^*(s',a') \right] \tag{1}2.2 DQNDQN 存在两种策略：行为策略和目标策略。行为策略执行的是 $\epsilon$-greedy 策略，目标策略执行的是 greedy 策略。 每次训练，使用行为策略产生轨迹 $(s_t,a_t,r_t,s_{t+1})$，并存储到回放池中。训练的目标函数是： \mathcal{L} = \mathbb{E}(Q(s_t,a_t) - y_t)^2 \\ y_t = r_t + \gamma \max_{a'\in A} Q(s_{t+1}, a') \tag{2}其中 $Q(s,a)$ 表示动作值函数的函数逼近。样本从回放池中采样。 2.3 DDPGDDPG 是一种采用 AC 框架的算法。A 表示策略网络：$\pi: S \rightarrow A$，C 表示动作值网络：$Q: S \times A \rightarrow \mathbb{R}$ 。 同样也采用行为策略在每个 episode 中产生轨迹。行为策略的表达式为 $\pi_b(s) = \pi(s) + \mathcal{N}(0,1)$ ，表示一个确定策略，，加上一个随机分布（分布类型可以自定义）。critic 的目标与 DQN 的训练目标相似，只不过目标策略不是 greedy 策略，而是确定策略 $\pi(s)$ 。critic 的目标为：$y_t = r_t + \gamma Q(s_{t+1},\pi(s_{t+1}))$ 。actor 的目标函数为 $\mathcal{L}_a = -\mathbb{E}_s Q(s,\pi(s))$ 。样本同样从回放池中采样。 2.4 UVFA全称为 Universal Value Function Approximators，出自论文 [1] 。UVFA 是 DQN 的一个扩展，设立了不止一个目标去优化。假设其中一个目标 $g \in \mathcal{G}$，对应的奖励函数写为：$r_g: S \times A \rightarrow \mathbb{R}$ 。 每个 episode 开始时，都根据某种分布采样一个 state-goal 分布，记为 $p(s_0,g)$ 。这个目标 $g$ 将在这个 episode 中保持不变。接下来每个时间步长，智能体的输入不仅是状态 $s_t$，同时还有目标 $g$，因此策略的形式可以表示为：$\pi: S \times \mathcal{G} \rightarrow A$，奖励函数的形式为 $r_t = r_g(s_t,a_t)$ 。 动作值函数同样也不止依赖于状态动作对，也依赖于目标 $g$ ，表示为 $Q^\pi(s_t,a_t,g) = \mathbb{E}[R_t|s_t,a_t,g]$ 。 3. 具体算法定义一个谓语：$f_g:S \rightarrow \{0,1\}$ 。目标表示为能够实现满足 $f_g(s) = 1$ 的任意状态。 例如，如果指定状态空间的某一状态为目标，则 $f_g(s) = [s=g]$ 。如果指定状态空间某一维度的值为目标（假设 $S=\mathbb{R}^2$），则 $f_g((x,y)) = [x = g]$ 。 另外假设，对于状态空间的任意状态，我们都能找到一个目标，使得该状态满足要求。用数学符号定义为：存在一个映射 ：$m: S \rightarrow \mathcal{G} \;\; s.t. \;\; \forall_{s \in S} f_{m(s)}(s)=1$ 。最简单的，如果该映射是个很恒等映射，即 $\mathcal{G} = S$，$f_g(s) = [s=g]$， 显然该假设成立。 再举一个例子，如果状态空间是二维的，目标空间是一维的，则该假设也能够成立，例如其中一种情况为 $m((x,y))=x$ 。 HER 背后的思想是，在经历过一些 episode 之后，即经验回放池中存储着一系列经验和每个 episode 的目标（目标空间的一个子集）。HER 需要决定的是每次回放哪些目标的轨迹。文中称之为回放策略 $\mathbb{S}$。 HER 可视为一种循序渐进的教学，先从简单的容易实现的目标回放，再到困难的最终的目标回放。 算法伪代码如下图所示： 伪代码中最重要的就是采样策略 $\mathbb{S}$ 。 4. 工程设置环境：7 个自由度的机械臂 任务设定：(1) 用机械臂将物体推向目标处。(2) 用机械臂给滑块施力，让它滑到目标处。(3) 用机械臂夹起物体并放置到空间某处。 状态空间：机械臂的关节角度和速度（包含线性速度、角速度），关节位置，物体的转动和速度。 目标：目标设定为靠近某个状态下物体的位置，表示为 $f_g(s)=[|g-s_{object}| \le \epsilon]$ ，其中 $s_{object}$ 表示状态 $s$ 下物体的位置。 奖励：$r(a,s,g) = -[f_g(s’)=0]$，其中 $s’$ 表示在 状态 $s$ 下执行动作 $a$ 后的下一个状态。这表示如果 $s’$ 不满足目标 $g$ 的要求，则奖励设置为 -1，否则设置为 1 。 动作：四维输出，前面三维是抓手的绝对位置，最后一维是抓手的两支手指的距离。注意机械臂的控制是通过运动学进行的，根据抓手期待的位置去控制。 目标回放策略 $\mathbb{S}$：文中总共设计了四种策略。 final：每个 episode 的最后一个状态作为目标。 future：从当前的 episode 中收集可能在未来遇见的状态作为目标。 episode：从当前的 episode 中随机采样状态作为目标。 random：从所有遇见的状态中随机采样状态作为目标。 参考文献[1] Schaul, T., Horgan, D., Gregor, K., &amp; Silver, D. (2015). Universal value function approximators. 32nd International Conference on Machine Learning, ICML 2015, 2, 1312–1320. International Machine Learning Society (IMLS).]]></content>
+    <content type="text"><![CDATA[1. HER 概念对于机器人的强化学习算法，存在的挑战就是奖励函数的设置，不但需要考虑如何反映任务的完成水平，同时还需要指导策略的优化。有时，奖励函数的设置还需涉及到具体领域的专业知识。如果不对这些复杂的工程问题进行考虑，而简单用奖励函数表示任务成功或失败，就会造成奖励系数问题。就算仔细设计了奖励函数，可扩展性和鲁棒性也不高。 为了解决奖励稀疏的问题，本文提出了 HER 算法。HER 算法可以针对稀疏和二进制奖励的情况，提高样本效率，进而避免涉及复杂的奖励函数。可以将 HER 算法与其他 off-policy 强化学习算法结合。二进制奖励是指奖励只有两种值，出现在任务成功或任务失败的时候。 HER 算法具备推理能力，能够实现系统中任意状态为目标的任务。HER 参考论文 [1] 的通用策略设计，对于输入，不仅输入当前状态，而且需要目标状态。 HER 背后的核心思想是，在每个 episode 中都回放不同的目标（即当前 episode 需要实现的目标），而不止是最终要实现的目标。 2. 相关知识2.1 RL 基础最优动作值函数（对于最优策略 $\pi^*$，满足 $Q^{\pi^*}(s,a) \ge Q^\pi(s,a)$，$\forall s \in S, \forall a \in A$）： Q^{*} (s,a) = \mathbb{E}_{s'\sim p(\cdot|s,a)} \left[ r(s,a) + \gamma \mathop{\max}_{a'\in A} Q^*(s',a') \right] \tag{1}2.2 DQNDQN 存在两种策略：行为策略和目标策略。行为策略执行的是 $\epsilon$-greedy 策略，目标策略执行的是 greedy 策略。 每次训练，使用行为策略产生轨迹 $(s_t,a_t,r_t,s_{t+1})$，并存储到回放池中。训练的目标函数是： \mathcal{L} = \mathbb{E}(Q(s_t,a_t) - y_t)^2 \\ y_t = r_t + \gamma \max_{a'\in A} Q(s_{t+1}, a') \tag{2}其中 $Q(s,a)$ 表示动作值函数的函数逼近。样本从回放池中采样。 2.3 DDPGDDPG 是一种采用 AC 框架的算法。A 表示策略网络：$\pi: S \rightarrow A$，C 表示动作值网络：$Q: S \times A \rightarrow \mathbb{R}$ 。 同样也采用行为策略在每个 episode 中产生轨迹。行为策略的表达式为 $\pi_b(s) = \pi(s) + \mathcal{N}(0,1)$ ，表示一个确定策略，，加上一个随机分布（分布类型可以自定义）。critic 的目标与 DQN 的训练目标相似，只不过目标策略不是 greedy 策略，而是确定策略 $\pi(s)$ 。critic 的目标为：$y_t = r_t + \gamma Q(s_{t+1},\pi(s_{t+1}))$ 。actor 的目标函数为 $\mathcal{L}_a = -\mathbb{E}_s Q(s,\pi(s))$ 。样本同样从回放池中采样。 2.4 UVFA全称为 Universal Value Function Approximators，出自论文 [1] 。UVFA 是 DQN 的一个扩展，设立了不止一个目标去优化。假设其中一个目标 $g \in \mathcal{G}$，对应的奖励函数写为：$r_g: S \times A \rightarrow \mathbb{R}$ 。 每个 episode 开始时，都根据某种分布采样一个 state-goal 分布，记为 $p(s_0,g)$ 。这个目标 $g$ 将在这个 episode 中保持不变。接下来每个时间步长，智能体的输入不仅是状态 $s_t$，同时还有目标 $g$，因此策略的形式可以表示为：$\pi: S \times \mathcal{G} \rightarrow A$，奖励函数的形式为 $r_t = r_g(s_t,a_t)$ 。 动作值函数同样也不止依赖于状态动作对，也依赖于目标 $g$ ，表示为 $Q^\pi(s_t,a_t,g) = \mathbb{E}[R_t|s_t,a_t,g]$ 。 3. 具体算法定义一个谓语：$f_g:S \rightarrow \{0,1\}$ 。目标表示为能够实现满足 $f_g(s) = 1$ 的任意状态。 例如，如果指定状态空间的某一状态为目标，则 $f_g(s) = [s=g]$ 。如果指定状态空间某一维度的值为目标（假设 $S=\mathbb{R}^2$），则 $f_g((x,y)) = [x = g]$ 。 另外假设，对于状态空间的任意状态，我们都能找到一个目标，使得该状态满足要求。用数学符号定义为：存在一个映射 ：$m: S \rightarrow \mathcal{G} \;\; s.t. \;\; \forall_{s \in S} f_{m(s)}(s)=1$ 。最简单的，如果该映射是个很恒等映射，即 $\mathcal{G} = S$，$f_g(s) = [s=g]$， 显然该假设成立。 再举一个例子，如果状态空间是二维的，目标空间是一维的，则该假设也能够成立，例如其中一种情况为 $m((x,y))=x$ 。 HER 背后的思想是，在经历过一些 episode 之后，即经验回放池中存储着一系列经验和每个 episode 的目标（目标空间的一个子集）。HER 需要决定的是每次回放哪些目标的轨迹。文中称之为回放策略 $\mathbb{S}$。 HER 可视为一种循序渐进的教学，先从简单的容易实现的目标回放，再到困难的最终的目标回放。 算法伪代码如下图所示： 伪代码中最重要的就是采样策略 $\mathbb{S}$ 。 4. 工程设置环境：7 个自由度的机械臂 任务设定：(1) 用机械臂将物体推向目标处。(2) 用机械臂给滑块施力，让它滑到目标处。(3) 用机械臂夹起物体并放置到空间某处。 状态空间：机械臂的关节角度和速度（包含线性速度、角速度），关节位置，物体的转动和速度。 目标：目标设定为靠近某个状态下物体的位置，表示为 $f_g(s)=[|g-s_{object}| \le \epsilon]$ ，其中 $s_{object}$ 表示状态 $s$ 下物体的位置。 奖励：$r(a,s,g) = -[f_g(s’)=0]$，其中 $s’$ 表示在 状态 $s$ 下执行动作 $a$ 后的下一个状态。这表示如果 $s’$ 不满足目标 $g$ 的要求，则奖励设置为 -1，否则设置为 1 。 动作：四维输出，前面三维是抓手的绝对位置，最后一维是抓手的两支手指的距离。注意机械臂的控制是通过运动学进行的，根据抓手期待的位置去控制。 目标回放策略 $\mathbb{S}$：文中总共设计了四种策略。 final：每个 episode 的最后一个状态作为目标。 future：从当前的 episode 中收集可能在未来遇见的状态作为目标。 episode：从当前的 episode 中随机采样状态作为目标。 random：从所有遇见的状态中随机采样状态作为目标。 参考文献[1] Schaul, T., Horgan, D., Gregor, K., &amp; Silver, D. (2015). Universal value function approximators. 32nd International Conference on Machine Learning, ICML 2015, 2, 1312–1320. International Machine Learning Society (IMLS).]]></content>
       <categories>
         <category>强化学习</category>
       </categories>
@@ -131,8 +175,8 @@
         <category>强化学习</category>
       </categories>
       <tags>
-        <tag>强化学习</tag>
         <tag>AC</tag>
+        <tag>强化学习</tag>
       </tags>
   </entry>
   <entry>
@@ -143,8 +187,8 @@
         <category>强化学习</category>
       </categories>
       <tags>
-        <tag>强化学习</tag>
         <tag>AC</tag>
+        <tag>强化学习</tag>
         <tag>ACER</tag>
       </tags>
   </entry>

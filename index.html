@@ -226,6 +226,450 @@
   
   
   <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/21/Python中动态导入对象importlib-import-module-的使用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2020/04/21/Python中动态导入对象importlib-import-module-的使用/" class="post-title-link" itemprop="url">Python中动态导入对象importlib.import_module()的使用</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-04-21 16:50:17 / 修改时间：16:53:51" itemprop="dateCreated datePublished" datetime="2020-04-21T16:50:17+08:00">2020-04-21</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/21/Python中动态导入对象importlib-import-module-的使用/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/04/21/Python中动态导入对象importlib-import-module-的使用/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><a href="https://blog.csdn.net/edward_zcl/article/details/88809212" target="_blank" rel="noopener">https://blog.csdn.net/edward_zcl/article/details/88809212</a></p>
+<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>一个函数运行需要根据不同项目的配置，动态导入对应的配置文件运行。</p>
+<h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p><strong>文件结构</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">a #文件夹</span><br><span class="line">	│a.py</span><br><span class="line">	│__init__.py</span><br><span class="line">b #文件夹</span><br><span class="line">	│b.py</span><br><span class="line">	│__init__.py</span><br><span class="line">	├─c#文件夹</span><br><span class="line">		│c.py</span><br><span class="line">		│__init__.py</span><br><span class="line"></span><br><span class="line"># c.py 中内容</span><br><span class="line">args = &#123;&apos;a&apos;:1&#125;</span><br><span class="line"></span><br><span class="line">class C:</span><br><span class="line">    </span><br><span class="line">    def c(self):</span><br><span class="line">        pass</span><br></pre></td></tr></table></figure>
+<p><strong>目的</strong><br> 向a模块中导入c.py中的对象</p>
+<p><strong>解决方案</strong></p>
+<p>a.py</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> importlib</span><br><span class="line"></span><br><span class="line">params = importlib.import_module(<span class="string">'b.c.c'</span>) <span class="comment">#绝对导入</span></span><br><span class="line">params_ = importlib.import_module(<span class="string">'.c.c'</span>,package=<span class="string">'b'</span>) <span class="comment">#相对导入</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 对象中取出需要的对象</span></span><br><span class="line">params.args <span class="comment">#取出变量</span></span><br><span class="line">params.C  <span class="comment">#取出class C</span></span><br><span class="line">params.C.c  <span class="comment">#取出class C 中的c 方法</span></span><br></pre></td></tr></table></figure>
+<p>以上就是动态函数import_module的使用方法</p>
+<hr>
+<h2 id="又如："><a href="#又如：" class="headerlink" title="又如："></a>又如：</h2><p><a href="https://blog.csdn.net/mouday/article/details/84062182" target="_blank" rel="noopener">https://blog.csdn.net/mouday/article/details/84062182</a></p>
+<h3 id="Python编程：importlib-import-module动态导入模块"><a href="#Python编程：importlib-import-module动态导入模块" class="headerlink" title="Python编程：importlib.import_module动态导入模块"></a>Python编程：importlib.import_module动态导入模块</h3><p>环境：python 3.6</p>
+<p>文件结构</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">├── clazz</span><br><span class="line">│   ├── __init__.py</span><br><span class="line">│   ├── a.py</span><br><span class="line">│   └── b.py</span><br><span class="line">└── main.py</span><br></pre></td></tr></table></figure>
+<p>a.py 的代码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">"show A"</span>)</span><br></pre></td></tr></table></figure>
+<p>b.py 的代码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">"show B"</span>)</span><br></pre></td></tr></table></figure>
+<p>从main中导入clazz包中的a 和b 模块</p>
+<p>main.py</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> importlib</span><br><span class="line"></span><br><span class="line"><span class="comment"># 绝对导入</span></span><br><span class="line">a = importlib.import_module(<span class="string">"clazz.a"</span>)</span><br><span class="line">a.show()</span><br><span class="line"><span class="comment"># show A</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 相对导入</span></span><br><span class="line">b = importlib.import_module(<span class="string">".b"</span>, <span class="string">"clazz"</span>)</span><br><span class="line">b.show()</span><br><span class="line"><span class="comment"># show B</span></span><br></pre></td></tr></table></figure>
+<p>注意，相对导入有个一点.， 类似路径。</p>
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/21/python中defaultdict用法详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2020/04/21/python中defaultdict用法详解/" class="post-title-link" itemprop="url">python中defaultdict用法详解</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-04-21 16:05:39 / 修改时间：16:09:51" itemprop="dateCreated datePublished" datetime="2020-04-21T16:05:39+08:00">2020-04-21</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/21/python中defaultdict用法详解/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/04/21/python中defaultdict用法详解/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>作者：dpengwang<br>链接：<a href="https://www.jianshu.com/p/bbd258f99fd3" target="_blank" rel="noopener">https://www.jianshu.com/p/bbd258f99fd3</a><br>来源：简书</p>
+<h4 id="1-认识-defaultdict"><a href="#1-认识-defaultdict" class="headerlink" title="1. 认识 defaultdict"></a>1. 认识 defaultdict</h4><p>当我使用普通的字典时，用法一般是dict={},添加元素的只需要dict[element] =value即，调用的时候也是如此，dict[element] = xxx,但前提是element字典里，如果不在字典里就会报错，如：</p>
+<p><img src="/2020/04/21/python中defaultdict用法详解/huangjp/Documents/blog/blog/source/_posts/python中defaultdict用法详解/1.png" alt="1"></p>
+<p>这时defaultdict就能排上用场了，defaultdict的作用是在于，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值，这个默认值是什么呢，下面会说。</p>
+<h4 id="如何使用defaultdict"><a href="#如何使用defaultdict" class="headerlink" title="如何使用defaultdict"></a>如何使用defaultdict</h4><p>defaultdict接受一个工厂函数作为参数，如下来构造：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dict =defaultdict( factory_function)</span><br></pre></td></tr></table></figure>
+<p>这个factory_function可以是list、set、str等等，作用是当key不存在时，返回的是工厂函数的默认值，比如list对应[ ]，str对应的是空字符串，set对应set( )，int对应0，如下举例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict</span><br><span class="line"></span><br><span class="line">dict1 = defaultdict(int)</span><br><span class="line">dict2 = defaultdict(set)</span><br><span class="line">dict3 = defaultdict(str)</span><br><span class="line">dict4 = defaultdict(list)</span><br><span class="line">dict1[<span class="number">2</span>] =<span class="string">'two'</span></span><br><span class="line"></span><br><span class="line">print(dict1[<span class="number">1</span>])</span><br><span class="line">print(dict2[<span class="number">1</span>])</span><br><span class="line">print(dict3[<span class="number">1</span>])</span><br><span class="line">print(dict4[<span class="number">1</span>])</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0</span></span><br><span class="line"><span class="keyword">set</span>()</span><br><span class="line"></span><br><span class="line">[<span class="meta"></span>]</span><br></pre></td></tr></table></figure>
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/18/python-单元测试框架之unittest框架简单总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2020/04/18/python-单元测试框架之unittest框架简单总结/" class="post-title-link" itemprop="url">python 单元测试框架之unittest框架简单总结</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-04-18 15:54:48 / 修改时间：15:56:23" itemprop="dateCreated datePublished" datetime="2020-04-18T15:54:48+08:00">2020-04-18</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/18/python-单元测试框架之unittest框架简单总结/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/04/18/python-单元测试框架之unittest框架简单总结/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>原文链接：<a href="https://blog.csdn.net/xiaoquantouer/java/article/details/75089200" target="_blank" rel="noopener">https://blog.csdn.net/xiaoquantouer/java/article/details/75089200</a></p>
+<h3 id="一、什么是单元测试"><a href="#一、什么是单元测试" class="headerlink" title="一、什么是单元测试"></a>一、什么是单元测试</h3><p>单元测试是用来对一个模块、一个函数或者一个类来进行正确性检验的测试工作。</p>
+<p>比如对于函数abs()，我们可以编写的测试用例为：</p>
+<p>（1）输入正数，比如1、1.2、0.99，期待返回值与输入相同</p>
+<p>（2）输入复数，比如-1、-1.2、-0.99，期待返回值与输入相反</p>
+<p>（3）输入0，期待返回0</p>
+<p>（4）输入非数值类型，比如None、[]、{}、期待抛出TypeError</p>
+<p>把上面这些测试用例放到一个测试模块里，就是一个完整的单元测试</p>
+<h3 id="二、unittest工作原理"><a href="#二、unittest工作原理" class="headerlink" title="二、unittest工作原理"></a>二、unittest工作原理</h3><p>unittest中最核心的四部分是：TestCase，TestSuite，TestRunner，TestFixture</p>
+<p>（1）一个TestCase的实例就是一个测试用例。测试用例就是指一个完整的测试流程，包括测试前准备环境的搭建（setUp），执行测试代码（run），以及测试后环境的还原（tearDown）。元测试（unit test）的本质也就在这里，一个测试用例是一个完整的测试单元，通过运行这个测试单元，可以对某一个问题进行验证。</p>
+<p>（2）而多个测试用例集合在一起，就是TestSuite，而且TestSuite也可以嵌套TestSuite。</p>
+<p>（3）TestLoader是用来加载TestCase到TestSuite中的。</p>
+<p>（4）TextTestRunner是来执行测试用例的，其中的run(test)会执行TestSuite/TestCase中的run(result)方法</p>
+<p>（5）测试的结果会保存到TextTestResult实例中，包括运行了多少测试用例，成功了多少，失败了多少等信息。</p>
+<p>综上，整个流程就是首先要写好TestCase，然后由TestLoader加载TestCase到TestSuite，然后由TextTestRunner来运行TestSuite，运行的结果保存在TextTestResult中，整个过程集成在unittest.main模块中。</p>
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/18/pytorch-编程总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Huangjp">
+      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
+      <meta itemprop="image" content="/images/dog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Huangjp Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2020/04/18/pytorch-编程总结/" class="post-title-link" itemprop="url">pytorch 编程总结</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-04-18 15:30:33 / 修改时间：15:39:37" itemprop="dateCreated datePublished" datetime="2020-04-18T15:30:33+08:00">2020-04-18</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术总结/" itemprop="url" rel="index"><span itemprop="name">技术总结</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/18/pytorch-编程总结/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/04/18/pytorch-编程总结/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="1-pytorch-设定随机种子"><a href="#1-pytorch-设定随机种子" class="headerlink" title="1.  pytorch 设定随机种子"></a>1.  pytorch 设定随机种子</h3><p>为了让实验复现，需要设定随机种子。pytorch 需要设定以下五条语句：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">torch.manual_seed(myseed)			       <span class="comment"># CPU</span></span><br><span class="line">torch.cuda.manual_seed(myseed) 			<span class="comment"># GPU</span></span><br><span class="line">torch.cuda.manual_seed_all(myseed) 		   <span class="comment"># multi-GPU</span></span><br><span class="line">torch.backends.cudnn.deterministic = <span class="literal">True</span>       <span class="comment"># cpu/gpu结果保持一致</span></span><br></pre></td></tr></table></figure>
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/09/学术网站汇总/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1028,476 +1472,6 @@ y = r+\gamma \max_{a_i} \left[ \lambda \min_{j=1,2} Q_{\theta'_j}(s',a_i) + (1-\
   </article>
 
     
-        <article itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block home">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/08/Soft-actor-critic/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Huangjp">
-      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
-      <meta itemprop="image" content="/images/dog.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Huangjp Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-            
-            <a href="/2020/03/08/Soft-actor-critic/" class="post-title-link" itemprop="url">Soft actor-critic</a>
-          
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-03-08 12:15:58" itemprop="dateCreated datePublished" datetime="2020-03-08T12:15:58+08:00">2020-03-08</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-        
-      
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/03/08/Soft-actor-critic/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/08/Soft-actor-critic/" itemprop="commentCount"></span></a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Haarnoja, T., Zhou, A., Abbeel, P., &amp; Levine, S. (2018). Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. <em>35th International Conference on Machine Learning, ICML 2018</em>, <em>5</em>, 2976–2989.</p>
-<h2 id="1-论文概要"><a href="#1-论文概要" class="headerlink" title="1. 论文概要"></a>1. 论文概要</h2><p>无模型的强化学习算法存在采样复杂度高和收敛性弱的问题。即使很简单的任务，所需要的样本数量都达到上百万。另外对于不同问题，这些强化学习算法的超参数需要精细调整。本文提出一个 soft actor-critic 强化学习方法，是就基于最大化熵的 off-policy 强化学习方法。在这个框架中，actor 旨在于最大化奖励回报和熵。本文提出的算法在稳定性和性能方面都胜过目前的强化学习算法。</p>
-<p>之所以 TRPO、PPO 和 A3C 这些算法的采样复杂度高，是因为他们都需要在每个梯度更新步骤采集新的样本。而 off-policy 方法一般用在 Q-learning 一类强化学习方法上，与传统的策略梯度方法结合会导致算法稳定性和收敛性下降。另外，最大化熵方法通常能提高探索效率和鲁棒性，但还没有与 off-policy 和 policy-gradient 等强化学习模型结合起来。</p>
-<p>本文的主要贡献点就是将 off-policy 和最大化熵方法结合到 ac 框架中，用于连续空间的控制任务，并将算法命名为 SAC （soft actor-critic）。之前的很多 AC 框框架只采用了 on-policy 方法，并只是将熵当作正则项。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/03/08/Soft-actor-critic/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-        <article itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block home">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/04/Generative-Adversarial-Imitation-Learning/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Huangjp">
-      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
-      <meta itemprop="image" content="/images/dog.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Huangjp Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-            
-            <a href="/2020/03/04/Generative-Adversarial-Imitation-Learning/" class="post-title-link" itemprop="url">Generative Adversarial Imitation Learning</a>
-          
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-03-04 17:44:52" itemprop="dateCreated datePublished" datetime="2020-03-04T17:44:52+08:00">2020-03-04</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-16 11:45:17" itemprop="dateModified" datetime="2020-04-16T11:45:17+08:00">2020-04-16</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-        
-      
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/03/04/Generative-Adversarial-Imitation-Learning/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/03/04/Generative-Adversarial-Imitation-Learning/" itemprop="commentCount"></span></a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="1-GAIL-概念介绍"><a href="#1-GAIL-概念介绍" class="headerlink" title="1. GAIL 概念介绍"></a>1. GAIL 概念介绍</h2><p>假如需要从一个示例的专家数据中学习出一个策略，而且学习过程中没有专家的指导和信号预测。一种方是行为克隆方法，主要是通过监督学习模型从专家数据中学习出策略，但是这种方法需要大量数据。另一种方法是通过逆强化学习从专家数据中学习代价函数，该代价函数从专家的角度而言是唯一最优的，但是这种方法不直接而且比较慢，通常需要强化学习在内循环。为什么不可以直接从专家数据中学习出一个策略呢？</p>
-<p>本文提出一种可以直接从专家数据中学习出策略的算法，称为 GAIL（Generative Adversarial Imitation Learning），生成对抗模仿学习。GAIL 实际上也运用了 GAN 的训练方法，来拟合状态数据和动作数据的分布，从而定义专家的行为。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/03/04/Generative-Adversarial-Imitation-Learning/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-        <article itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block home">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/29/Hindsight-Experience-Replay/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Huangjp">
-      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
-      <meta itemprop="image" content="/images/dog.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Huangjp Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-            
-            <a href="/2020/02/29/Hindsight-Experience-Replay/" class="post-title-link" itemprop="url">Hindsight Experience Replay</a>
-          
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-02-29 17:57:04" itemprop="dateCreated datePublished" datetime="2020-02-29T17:57:04+08:00">2020-02-29</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-03-04 12:51:37" itemprop="dateModified" datetime="2020-03-04T12:51:37+08:00">2020-03-04</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-        
-      
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/02/29/Hindsight-Experience-Replay/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/02/29/Hindsight-Experience-Replay/" itemprop="commentCount"></span></a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="1-HER-概念"><a href="#1-HER-概念" class="headerlink" title="1. HER 概念"></a>1. HER 概念</h2><p>对于机器人的强化学习算法，存在的挑战就是奖励函数的设置，不但需要考虑如何反映任务的完成水平，同时还需要指导策略的优化。有时，奖励函数的设置还需涉及到具体领域的专业知识。如果不对这些复杂的工程问题进行考虑，而简单用奖励函数表示任务成功或失败，就会造成奖励系数问题。就算仔细设计了奖励函数，可扩展性和鲁棒性也不高。</p>
-<p>为了解决奖励稀疏的问题，本文提出了 HER 算法。HER 算法可以针对稀疏和二进制奖励的情况，提高样本效率，进而避免涉及复杂的奖励函数。可以将 HER 算法与其他 off-policy 强化学习算法结合。二进制奖励是指奖励只有两种值，出现在任务成功或任务失败的时候。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/02/29/Hindsight-Experience-Replay/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-        <article itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block home">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/25/Reinforcement-learning-with-unsupervised-auxiliary-tasks/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Huangjp">
-      <meta itemprop="description" content="学而不思则罔 思而不学则殆">
-      <meta itemprop="image" content="/images/dog.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Huangjp Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-            
-            <a href="/2020/02/25/Reinforcement-learning-with-unsupervised-auxiliary-tasks/" class="post-title-link" itemprop="url">Reinforcement learning with unsupervised auxiliary tasks</a>
-          
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-02-25 21:01:45" itemprop="dateCreated datePublished" datetime="2020-02-25T21:01:45+08:00">2020-02-25</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-03-04 12:53:44" itemprop="dateModified" datetime="2020-03-04T12:53:44+08:00">2020-03-04</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/强化学习/" itemprop="url" rel="index"><span itemprop="name">强化学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-        
-      
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/02/25/Reinforcement-learning-with-unsupervised-auxiliary-tasks/#comments" itemprop="discussionUrl"><span class="post-comments-count valine-comment-count" data-xid="/2020/02/25/Reinforcement-learning-with-unsupervised-auxiliary-tasks/" itemprop="commentCount"></span></a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="1-摘要"><a href="#1-摘要" class="headerlink" title="1. 摘要"></a>1. 摘要</h2><p>传统的强化学习目标是最大化累积奖励函数。本文提出一种强化学习方法，目标改为同时最大化多个伪奖励函数，相当于增加了辅助目标。</p>
-<p>奖励信号有时是难以观测的，稀少的。即使奖励信号很频繁，运动传感器数据也包含大量其他可能存在的学习目标。本文的目的是预测和控制运动传感器数据的特征，将它们当作强化学习的伪奖励信号进行训练（换句话来说，就是通过这些伪奖励信号的训练，改变网络的特征提取）。直觉上，如果智能体能够预测和控制它未来的经历，很容易实现一个长远的复杂的目标。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/02/25/Reinforcement-learning-with-unsupervised-auxiliary-tasks/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
   </div>
 
   
@@ -1550,7 +1524,7 @@ y = r+\gamma \max_{a_i} \left[ \lambda \min_{j=1,2} Q_{\theta'_j}(s',a_i) + (1-\
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">27</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1559,7 +1533,7 @@ y = r+\gamma \max_{a_i} \left[ \lambda \min_{j=1,2} Q_{\theta'_j}(s',a_i) + (1-\
       
       <div class="site-state-item site-state-categories">
         
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span>
         
       </div>
@@ -1568,7 +1542,7 @@ y = r+\gamma \max_{a_i} \left[ \lambda \min_{j=1,2} Q_{\theta'_j}(s',a_i) + (1-\
       
       <div class="site-state-item site-state-tags">
         
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">25</span>
         <span class="site-state-item-name">标签</span>
         
       </div>
